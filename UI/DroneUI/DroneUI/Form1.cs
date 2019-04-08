@@ -14,78 +14,49 @@ namespace DroneUI
 {
     public partial class Form1 : Form
     {
-        SerialPort port;
+        public const int SERIAL_SPEED = 115200;
 
-        StringBuilder builder = new StringBuilder(10000);
+        public bool logEverything=false;
 
+        SerialCommunicator communicator;        
+        flyMode flyMode = flyMode.Flappy;
+
+        IRReceivedData IRdata = new IRReceivedData();
+        
         string pointData = "";
         string pointsDT = "";
 
         public Form1()
         {
+            communicator = new SerialCommunicator(LogSerialMessage);
+
             InitializeComponent();
+           
+        }
+
+        private void AddHanlders()
+        {
+            communicator.addHandler("POINTS", handleIRPoints);
+            communicator.addHandler("POINTSDT", handleIRPointData);
+        }
+
+        private void handleIRPointData(string arg1, string[] arg2)
+        {
+            IRdata.pLeft = int.Parse(arg2[0]);
+            IRdata.pRight = int.Parse(arg2[1]);
+            IRdata.pMiddle = int.Parse(arg2[2]);
+            IRdata.pBack = int.Parse(arg2[3]);
+        }
+
+        private void handleIRPoints(string arg1, string[] arg2)
+        {
+            for (int i = 0; i < 4; i++) IRdata.points[i] = new Point(int.Parse(arg2[i*2]), int.Parse(arg2[(i * 2)+1]));
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            port = new SerialPort(textBox1.Text);
-            port.BaudRate = 115200;
-            port.NewLine = "\r\n";
-            port.Open();
-
-            Thread thead = new Thread(DoWork);
-            thead.IsBackground = true;
-            thead.SetApartmentState(ApartmentState.STA);
-            thead.Start();
-        }
-
-
-        void DoWork()
-        {
-            while(true)
-            {
-                if(port.BytesToRead>0)
-                {
-                    char readed = (char)port.ReadChar();
-                    if(readed=='|')
-                    {
-                        processMessage(builder.ToString());
-                        builder.Clear();
-                    }else
-                    {
-                        builder.Append(readed);
-                    }                   
-
-                }
-            }
-        }
-
-        void processMessage(string str)
-        {
-            if (str.Contains("@"))
-            {
-                try
-                {
-                    switch (str.Split('@')[0])
-                    {
-                        case "POINTS":
-                            Console.WriteLine("Got point data: " + str); 
-                            pointData = str.Split('@')[1];
-                            DrawIRSSensor();
-                            break;
-                        case "POINTSDT":
-                            Console.WriteLine("Got point processed data: "+str);
-                            pointsDT=str.Split('@')[1];
-                            break;
-                    }
-                }
-                catch
-                {
-
-                }
-            }
-        }
-
+            communicator.Connect(comboBox1.SelectedItem.ToString(), SERIAL_SPEED);
+        }                
 
         void DrawIRSSensor()
         {
@@ -97,50 +68,101 @@ namespace DroneUI
             float xMultiplier = pictureBox1.Width / 800.0f;
             float yMultiplier = pictureBox1.Height / 800.0f;
 
-            int pLeft = -1;
-            int pRight = -1;
-            int pMiddle = -1;
-            int pBack = -1;
-
-            if (pointsDT.Contains(",") && pointsDT.Split(',').Length==4)
+            for (int i = 0; i < 4; i++)
             {
-                pLeft = int.Parse(pointsDT.Split(',')[0]);
-                pRight = int.Parse(pointsDT.Split(',')[1]);
-                pMiddle = int.Parse(pointsDT.Split(',')[2]);
-                pBack = int.Parse(pointsDT.Split(',')[3]);
-            }
-
-            if (pointData.Contains(","))
-            {
-                string[] points = pointData.Split(',');
-                if(points.Length==8)
+                if (IRdata.points[i].X != 1023 && IRdata.points[i].Y != 1023)
                 {
-                    for(int i=0;i<8;i+=2)
+                    if (i == IRdata.pLeft)
                     {
-                        if(int.Parse(points[i])!=1023 && int.Parse(points[i + 1])!=1023)
-                        {
-                            if(i/2==pLeft)
-                            {
-                                e.Graphics.FillPie(Brushes.Red, new Rectangle((int)(int.Parse(points[i]) * xMultiplier), (int)(int.Parse(points[i + 1]) * yMultiplier), 10, 10), 0, 360);
-                            }
-                            else if(i/2==pRight)
-                            {
-                                e.Graphics.FillPie(Brushes.Green, new Rectangle((int)(int.Parse(points[i]) * xMultiplier), (int)(int.Parse(points[i + 1]) * yMultiplier), 10, 10), 0, 360);
-                            }else if(i/2==pBack)
-                            {
-                                e.Graphics.FillPie(Brushes.Blue, new Rectangle((int)(int.Parse(points[i]) * xMultiplier), (int)(int.Parse(points[i + 1]) * yMultiplier), 10, 10), 0, 360);
-                            }
-                            else
-                            {
-                                e.Graphics.FillPie(Brushes.Gray, new Rectangle((int)(int.Parse(points[i]) * xMultiplier), (int)(int.Parse(points[i + 1]) * yMultiplier), 10, 10), 0, 360);
-                            }
-                        }
-                  
+                        e.Graphics.FillPie(Brushes.Red, new Rectangle((int)(IRdata.points[i].X* xMultiplier), (int)(IRdata.points[i].Y * yMultiplier), 10, 10), 0, 360);
+                    }
+                    else if (i == IRdata.pRight)
+                    {
+                        e.Graphics.FillPie(Brushes.Green, new Rectangle((int)(IRdata.points[i].X * xMultiplier), (int)(IRdata.points[i].Y * yMultiplier), 10, 10), 0, 360);
+                    }
+                    else if (i == IRdata.pBack)
+                    {
+                        e.Graphics.FillPie(Brushes.Blue, new Rectangle((int)(IRdata.points[i].X * xMultiplier), (int)(IRdata.points[i].Y * yMultiplier), 10, 10), 0, 360);
+                    }
+                    else
+                    {
+                        e.Graphics.FillPie(Brushes.Gray, new Rectangle((int)(IRdata.points[i].X * xMultiplier), (int)(IRdata.points[i].Y * yMultiplier), 10, 10), 0, 360);
                     }
                 }
             }
-
-         
         }
+
+        private void buttonModeFlappy_Click(object sender, EventArgs e)
+        {
+            buttonModeFlappy.BackColor = Color.Lime;
+            buttonModeIR.BackColor = pictureBox1.BackColor;
+            buttonModeGPS.BackColor = pictureBox1.BackColor;
+            flyMode = flyMode.Flappy;
+        }
+
+        private void buttonModeIR_Click(object sender, EventArgs e)
+        {
+            buttonModeFlappy.BackColor = pictureBox1.BackColor;
+            buttonModeIR.BackColor = Color.Lime;
+            buttonModeGPS.BackColor = pictureBox1.BackColor;
+            flyMode = flyMode.IR;
+        }
+
+        private void buttonModeGPS_Click(object sender, EventArgs e)
+        {
+            buttonModeFlappy.BackColor = pictureBox1.BackColor;
+            buttonModeIR.BackColor = pictureBox1.BackColor;
+            buttonModeGPS.BackColor = Color.Lime;
+            flyMode = flyMode.GPS;
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            Log("Addding function handlers...");
+            AddHanlders();
+
+            Log("Getting available serial ports...");
+
+            comboBox1.Items.Clear();
+            foreach(string str in SerialCommunicator.getSerialPorts())
+            {
+                comboBox1.Items.Add(str);
+            }
+        }
+
+        private void timerIRDraw_Tick(object sender, EventArgs e)
+        {
+            DrawIRSSensor();
+        }
+
+        public void Log(string key,string data)
+        {
+            this.Invoke((MethodInvoker)delegate ()
+            {
+                textBoxLog.AppendText(String.Format("[{0}] - {1} - {2}{3}", DateTime.Now.ToShortTimeString(), key, data, Environment.NewLine));
+            });
+        }
+        public void Log(string data)
+        {
+            this.Invoke((MethodInvoker)delegate ()
+            {
+                textBoxLog.AppendText(String.Format("[{0}] - {1} - {2}{3}", DateTime.Now.ToShortTimeString(), "DEFAULT", data, Environment.NewLine));
+            });
+        }
+
+        public void LogSerialMessage(string key,string data)
+        {
+            this.Invoke((MethodInvoker)delegate () {
+                if (logEverything) textBoxLog.AppendText(String.Format("[{0}] - {1} - {2}{3}", DateTime.Now.ToShortTimeString(), "SERIAL (" + key + ")", data, Environment.NewLine));
+            });
+
+        }
+    }
+
+    public enum flyMode
+    {
+        Flappy,
+        IR,
+        GPS,
     }
 }
