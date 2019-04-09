@@ -22,13 +22,16 @@ namespace DroneUI
         flyMode flyMode = flyMode.Flappy;
 
         IRReceivedData IRdata = new IRReceivedData();
+
+        float loopTimeTOAverage = 0;
+        int loopTimesFORAveraging = 0;
         
         string pointData = "";
         string pointsDT = "";
 
         public Form1()
         {
-            communicator = new SerialCommunicator(LogSerialMessage);
+            communicator = new SerialCommunicator(LogSerialMessage,Log);
 
             InitializeComponent();
            
@@ -38,6 +41,13 @@ namespace DroneUI
         {
             communicator.addHandler("POINTS", handleIRPoints);
             communicator.addHandler("POINTSDT", handleIRPointData);
+            communicator.addHandler("LOOPTIME", handleLoopTime);
+        }
+
+        private void handleLoopTime(string arg1, string[] arg2)
+        {
+            loopTimeTOAverage += int.Parse(arg2[0]);
+            loopTimesFORAveraging++;
         }
 
         private void handleIRPointData(string arg1, string[] arg2)
@@ -156,6 +166,23 @@ namespace DroneUI
                 if (logEverything) textBoxLog.AppendText(String.Format("[{0}] - {1} - {2}{3}", DateTime.Now.ToShortTimeString(), "SERIAL (" + key + ")", data, Environment.NewLine));
             });
 
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            logEverything = checkBox1.Checked;
+        }
+
+        private void timerUpdateUI_Tick(object sender, EventArgs e)
+        {
+            labelFPS.Text = (int)(1000/(loopTimeTOAverage/loopTimesFORAveraging))+"";
+            loopTimesFORAveraging = 0;
+            loopTimeTOAverage = 0;
+        }
+
+        private void trackBar1_Scroll(object sender, EventArgs e)
+        {
+            communicator.sendMessage("MANPWR", trackBar1.Value+"");
         }
     }
 

@@ -4,48 +4,60 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <Adafruit_BME280.h>
-
 #include <VL53L0X.h>
-//#include "Adafruit_VL53L0X.h"
-
-//Adafruit_VL53L0X lox = Adafruit_VL53L0X();
-
-int PWM_freq=50;
-
-boolean ledState = false; 
-byte data_buf[16];
-
-int pwmData[16];
-
-int IRx[4];
-int IRy[4];
-int IRbuff;
-
-int IRv1[4]; //X1,Y1,X2,Y2
-bool IRDataFine=true;
-
-bool newPWMDataToOutput=false;
 
 #define SEALEVELPRESSURE_HPA (1013.25)
 
-int IrTLeft,IrTRight,IrTBack,IrTMiddle;
+int cycleCounter=0; //At 1.000.000, reset
 
+//Serial
+String serialContents;
+
+//PWM output stuff
+int PWM_freq=50;
+int pwmData[16];
+bool newPWMDataToOutput=false;
 hw_timer_t * PWMtimer = NULL;
 
+//IR positioning stuff
+byte IRdata_buf[16];
+int IRx[4];
+int IRy[4];
+int IRbuff;
+int IRv1[4]; //X1,Y1,X2,Y2
+bool IRDataFine=true;
+int IrTLeft,IrTRight,IrTBack,IrTMiddle;
+
+//BME280
 Adafruit_BME280 bme;
+float temperature,humidity,baromPressure;
+
+//IMU
 Adafruit_BNO055 bno = Adafruit_BNO055();
+uint8_t sysCal, gyroCal, accelCal, magCal = 0;
+imu::Vector<3> IMUAngles;
 
-
+//VL53LOX
 VL53L0X sensor;
+float TOFAltitude;
+
+
 
 void setup() {
 Serial.begin(115200);
 
-  //  initializeIRSensor();
+serialContents.reserve(150);
+  
   startPWM();   
   pinMode(PIN_BUZZER,OUTPUT);
 
-  /* Initialise the sensor */
+  initializeSensors();
+}
+
+void initializeSensors()
+{
+  initializeIRSensor();
+   /* Initialise the sensor */
   if(!bno.begin())
   {
     /* There was a problem detecting the BNO055 ... check your connections */
@@ -56,106 +68,83 @@ Serial.begin(115200);
       Serial.println("Could not find a valid BME280 sensor, check wiring!");
       while (1);
   }
-
-/*  if (!lox.begin()) {
-    Serial.println(F("Failed to boot VL53L0X"));
-    while(1);
-  }*/
-
-    Wire.begin(14,27);
-
+  
+  Wire.begin(14,27);
   sensor.init();
   sensor.setTimeout(500);
 
-sensor.setSignalRateLimit(0.1);
+  sensor.setSignalRateLimit(0.1);
   // increase laser pulse periods (defaults are 14 and 10 PCLKs)
   sensor.setVcselPulsePeriod(VL53L0X::VcselPeriodPreRange, 18);
   sensor.setVcselPulsePeriod(VL53L0X::VcselPeriodFinalRange, 14);
-  
 
   delay(3000);
 
-
   bno.setExtCrystalUse(true);
+}
 
+int startMil=0;
+void loop() {
+
+  startMil=millis();
+
+  readIMUValues();
+  if(cycleCounter%50==0)readBME280Values();
+  if(cycleCounter%10==0)readTOFValues();
+  
+  if(Serial.available()>0)
+  {
+    serialContents = Serial.readStringUntil('@');
+    parseSerialData();
+  }
+  
+  updateRawIRData();
+  processIRData();
+  /*if(cycleCounter%1==0)
+  {
+      printIRPoints();
+    printIRData();
+  }*/
+
+  
+
+  /*Serial.print("LOOPTIME|");
+  Serial.print(millis()-startMil);
+  Serial.print("O_o");*/
+
+  cycleCounter++;
+  if(cycleCounter>1000000) cycleCounter=0;
+}
+
+void parseSerialData()
+{
+  String msgID=serialContents.substring(0,serialContents.indexOf("|"));
+  String msgData=serialContents.substring(serialContents.indexOf("|")+1);
+  if(msgID=="MANPWR")
+  {
+      setMotorPower(1,msgData.toInt()/10,true);
+      Serial.println(msgData.toInt());
+  }
 
 }
 
-void loop() {
 
+void readTOFValues()
+{
+  TOFAltitude=sensor.readRangeSingleMillimeters();
+}
 
-  if(Serial.available()>0)
-  {
-    int pwr=Serial.parseInt();
-    setMotorPower(1,pwr,true);    
-    setMotorPower(2,pwr,true);    
-    setMotorPower(3,pwr,true);    
-    setMotorPower(4,pwr,true);    
-    Serial.print("Setting power to: ");
-    Serial.println(pwr);
-  }
+void readIMUValues()
+{  
+  bno.getCalibration(&sysCal, &gyroCal, &accelCal, &magCal);
+  IMUAngles = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+}
 
-  
-  Serial.println("Calibration status values: 0=uncalibrated, 3=fully calibrated");
-  uint8_t system, gyro, accel, mag = 0;
-  bno.getCalibration(&system, &gyro, &accel, &mag);
-  Serial.print("CALIBRATION: Sys=");
-  Serial.print(system, DEC);
-  Serial.print(" Gyro=");
-  Serial.print(gyro, DEC);
-  Serial.print(" Accel=");
-  Serial.print(accel, DEC);
-  Serial.print(" Mag=");
-  Serial.println(mag, DEC);
-
-  delay(1000);
-
-
-
-  Serial.print("Temperature = ");
-    Serial.print(bme.readTemperature());
-    Serial.println(" *C");
-
-    Serial.print("Pressure = ");
-
-    Serial.print(bme.readPressure() / 100.0F);
-    Serial.println(" hPa");
-
-    Serial.print("Approx. Altitude = ");
-    Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));
-    Serial.println(" m");
-
-    Serial.print("Humidity = ");
-    Serial.print(bme.readHumidity());
-    Serial.println(" %");
-
-    Serial.println();
-
-  /* Display the current temperature */
-  int8_t temp = bno.getTemp();
-  Serial.print("Current Temperature: ");
-  Serial.print(temp);
-  Serial.println(" C");
-  Serial.println("");
-
-  /*VL53L0X_RangingMeasurementData_t measure;
-    
-  Serial.print("Reading a measurement... ");
-  lox.rangingTest(&measure, false); // pass in 'true' to get debug data printout!
-
-  if (measure.RangeStatus != 4) {  // phase failures have incorrect data
-    Serial.print("Distance (mm): "); Serial.println(measure.RangeMilliMeter);
-  } else {
-    Serial.println(" out of range ");
-  }*/
- Serial.print(sensor.readRangeSingleMillimeters());
-  if (sensor.timeoutOccurred()) { Serial.print(" TIMEOUT"); }
-
-  Serial.println();
-/*  updateRawIRData();
-  processIRData();
-  printIRPoints();
-  printIRData();*/
+void readBME280Values()
+{
+   temperature=bme.readTemperature();  //degrees C 
+   baromPressure=(bme.readPressure() / 100.0F); //hPa
+   humidity=bme.readHumidity(); //%
 }
 
 void setMotorPower(int motorID,float power,bool sendUpdate)
@@ -227,7 +216,7 @@ void shift12BitsOut(uint8_t dataPin, uint8_t clockPin, int val) {
 
 void initializeIRSensor()
 {
-  Wire.begin();
+  Wire.begin(14,27);
     // IR sensor initialize
     Write_2IRbytes(0x30,0x01); delay(10);
     Write_2IRbytes(0x30,0x08); delay(10);
@@ -245,18 +234,18 @@ void updateRawIRData()
     Wire.endTransmission();
 
     Wire.requestFrom(0x58, 16);        // Request the 2 byte heading (MSB comes first)
-    for (int i=0;i<16;i++) { data_buf[i]=0; }
+    for (int i=0;i<16;i++) { IRdata_buf[i]=0; }
     int i=0;
     while(Wire.available() && i < 16) { 
-        data_buf[i] = Wire.read();
+        IRdata_buf[i] = Wire.read();
         i++;
     }
 
     for(int i=0;i<4;i++)
     {
-      IRx[i] = data_buf[i*3+1];
-      IRy[i] = data_buf[i*3+2];
-      IRbuff   = data_buf[i*3+3];
+      IRx[i] = IRdata_buf[i*3+1];
+      IRy[i] = IRdata_buf[i*3+2];
+      IRbuff   = IRdata_buf[i*3+3];
       IRx[i] += (IRbuff & 0x30) <<4;
       IRy[i] += (IRbuff & 0xC0) <<2;
     }
@@ -341,30 +330,30 @@ int getAngle(int x1,int y1,int x2, int y2)
 
 void printIRData()
 {
-  Serial.print("POINTSDT@");
+  Serial.print("POINTSDT|");
   Serial.print(IrTLeft);
-  Serial.print(",");
-  Serial.print(IrTRight);
-  Serial.print(",");
-  Serial.print(IrTMiddle);
-  Serial.print(",");
-  Serial.print(IrTBack);
   Serial.print("|");
+  Serial.print(IrTRight);
+  Serial.print("|");
+  Serial.print(IrTMiddle);
+  Serial.print("|");
+  Serial.print(IrTBack);
+  Serial.print("O_o");
 }
 
 void printIRPoints()
 {      
-    Serial.print("POINTS@");
+    Serial.print("POINTS|");
     for(int i=0; i<4; i++)
     {      
       Serial.print( int(IRx[i]) );
-      Serial.print(",");
+      Serial.print("|");
       Serial.print( int(IRy[i]) );
       if (i<3)
-        Serial.print(",");
+        Serial.print("|");
     }
-    Serial.print("|");
-    delay(100);
+     Serial.print("O_o");
+
 }
 
 void Write_2IRbytes(byte d1, byte d2)

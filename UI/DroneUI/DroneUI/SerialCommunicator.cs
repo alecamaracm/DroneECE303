@@ -16,9 +16,11 @@ namespace DroneUI
 
         SerialPort port;
         private Action<string, string> logMethod;
+        private Action<string> logGeneral;
 
-        public SerialCommunicator(Action<string,string> logEverything)
+        public SerialCommunicator(Action<string,string> logEverything,Action<string> gneralLog)
         {
+            logGeneral = gneralLog;
             this.logMethod = logEverything;
         }
 
@@ -51,9 +53,30 @@ namespace DroneUI
             {
                 try
                 {
-                    ProcessData(port.ReadTo("O_o").Replace("O_o",""));
-                }catch(Exception ex)
+                    string readed = port.ReadTo("O_o").Replace("O_o", "");
+                    Task.Run(() =>
+                    {
+                        try
+                        {
+                            ProcessData(readed);
+                        }                       
+                        catch (Exception ex)
+                        {
+                            logGeneral(ex.Message);
+                            Console.WriteLine("An error has ocurred when handling a response" + ex.Message);
+                        }
+
+
+                    });
+                }
+                catch (InvalidOperationException ex)
                 {
+                    logGeneral("Port closed!");
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    logGeneral(ex.Message);
                     Console.WriteLine("An error has ocurred when handling a response" + ex.Message);
                 }
             }
@@ -62,6 +85,7 @@ namespace DroneUI
         //TMR|asd|asda|asd|adasd|asdad|adasd|asdasdO_o
         private void ProcessData(string v)
         {
+
             String[] a = v.Split('|');
             string id = a[0];
             String[] parameters = new string[a.Length - 1];
@@ -76,6 +100,19 @@ namespace DroneUI
             {
                 throw new NotImplementedException("Message type " + id + " handler not defined!");
             }
+        }
+
+        public void sendMessage(string id,string data)
+        {
+            port.Write(id);
+            port.Write("|");
+            port.Write(data);
+            port.Write("@");    
+        }
+
+        public void sendMessage(string id, string[] data)
+        {
+            sendMessage(id, String.Join("|", data));
         }
     }
 }
