@@ -210,6 +210,7 @@ void startPWM()
   ledcAttachPin(PIN_PWM_GSCLK, 0);
 
   for(int i=0;i<16;i++)  pwmData[i]=4096-(205);
+  newPWMDataToOutput=true;
 
   pinMode(PIN_PWM_BLANK,OUTPUT);
   pinMode(PIN_PWM_SCLK,OUTPUT);
@@ -399,4 +400,3 @@ void Write_2IRbytes(byte d1, byte d2)
     Wire.write(d1); Wire.write(d2);
     Wire.endTransmission();
 }
-
