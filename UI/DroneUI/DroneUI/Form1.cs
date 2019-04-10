@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SharpDX.XInput;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -9,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+
 
 namespace DroneUI
 {
@@ -25,9 +27,14 @@ namespace DroneUI
 
         float loopTimeTOAverage = 0;
         int loopTimesFORAveraging = 0;
-        
-        string pointData = "";
-        string pointsDT = "";
+
+        float motorPower; //0-100
+
+        public bool gamepadConnected = false;
+
+        public float voltage = 0f;
+        Controller controller;
+        Gamepad gamepad;
 
         public Form1()
         {
@@ -42,6 +49,12 @@ namespace DroneUI
             communicator.addHandler("POINTS", handleIRPoints);
             communicator.addHandler("POINTSDT", handleIRPointData);
             communicator.addHandler("LOOPTIME", handleLoopTime);
+            communicator.addHandler("MAINVOLTS", handleMainVolts);
+        }
+
+        private void handleMainVolts(string arg1, string[] arg2)
+        {
+            voltage =(float)((int.Parse(arg2[0])/4095.0)*13.2);
         }
 
         private void handleLoopTime(string arg1, string[] arg2)
@@ -131,13 +144,7 @@ namespace DroneUI
             Log("Addding function handlers...");
             AddHanlders();
 
-            Log("Getting available serial ports...");
-
-            comboBox1.Items.Clear();
-            foreach(string str in SerialCommunicator.getSerialPorts())
-            {
-                comboBox1.Items.Add(str);
-            }
+            buttonReloadSerial.PerformClick();
         }
 
         private void timerIRDraw_Tick(object sender, EventArgs e)
@@ -178,11 +185,69 @@ namespace DroneUI
             labelFPS.Text = (int)(1000/(loopTimeTOAverage/loopTimesFORAveraging))+"";
             loopTimesFORAveraging = 0;
             loopTimeTOAverage = 0;
+            labelMainVolts.Text = Math.Round(voltage, 2) + " V";
         }
 
         private void trackBar1_Scroll(object sender, EventArgs e)
         {
-            communicator.sendMessage("MANPWR", trackBar1.Value+"");
+            
+        }
+
+        private void inputAdquireTimer_Tick(object sender, EventArgs e)
+        {
+            if (gamepadConnected==false || controller.IsConnected==false)
+                return;
+
+            gamepad = controller.GetState().Gamepad;
+            controller.SetVibration(new Vibration() { LeftMotorSpeed = (ushort)(65535 * (gamepad.LeftTrigger / 255)), RightMotorSpeed = (ushort)(65535 * (gamepad.RightTrigger / 255)) });
+
+
+            //motorControl1.setPower((int)(gamepad.LeftTrigger / 2.55));
+            //motorControl2.setPower((int)(gamepad.RightTrigger / 2.55));
+            //
+            // motorControl3.setPower((int)((gamepad.LeftThumbY+32768 )/ 655.55));
+
+            motorPower += gamepad.RightTrigger * 0.01f;
+            motorPower -= gamepad.LeftTrigger * 0.01f;
+          
+            if(gamepad.Buttons.HasFlag(GamepadButtonFlags.LeftShoulder))
+            {
+                motorPower -= 10;
+            }
+            if (motorPower < 0) motorPower = 0;
+            if (motorPower > 100) motorPower = 100;
+
+
+            motorControl4.setPower((int)motorPower);
+
+            Console.WriteLine(gamepad.RightTrigger + "");
+
+          
+        }
+
+
+
+        private void buttonReloadSerial_Click(object sender, EventArgs e)
+        {
+            Log("Getting available serial ports...");
+
+            comboBox1.Items.Clear();
+            foreach (string str in SerialCommunicator.getSerialPorts())
+            {
+                comboBox1.Items.Add(str);
+            }
+        }
+
+        private void buttonStartXBOX_Click(object sender, EventArgs e)
+        {
+            controller = new Controller(UserIndex.One);
+            gamepadConnected = controller.IsConnected;
+            Log("Gamepad status: " + (gamepadConnected ? "Connected" : "Disconnected"));
+        }
+
+        private void inputSendTimer_Tick(object sender, EventArgs e)
+        {
+            communicator.sendMessage("MANPWR", (int)(motorPower*10) + "");
         }
     }
 

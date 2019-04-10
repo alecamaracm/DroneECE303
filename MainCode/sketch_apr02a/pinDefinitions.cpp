@@ -1,4 +1,4 @@
-#define PIN_BUZZER 4
+#define PIN_BUZZER 12
 
 #define PIN_PWM_BLANK 18
 #define PIN_PWM_SCLK 19
@@ -8,3 +8,5 @@
 
 #define PIN_I2C_SDA 14
 #define PIN_I2C_SCL 27
+
+#define PIN_MAINVOLTS 4

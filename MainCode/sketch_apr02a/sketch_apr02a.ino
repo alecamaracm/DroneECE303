@@ -4,6 +4,7 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <Adafruit_BME280.h>
+#include <driver/adc.h>
 #include <VL53L0X.h>
 
 #define SEALEVELPRESSURE_HPA (1013.25)
@@ -52,6 +53,11 @@ serialContents.reserve(150);
   pinMode(PIN_BUZZER,OUTPUT);
 
   initializeSensors();
+
+
+  digitalWrite(PIN_BUZZER,HIGH);
+  delay(2500);
+  digitalWrite(PIN_BUZZER,LOW);
 }
 
 void initializeSensors()
@@ -88,32 +94,61 @@ void loop() {
 
   startMil=millis();
 
+//  Serial.println("IMU");
   readIMUValues();
+ //   Serial.println("BME");
   if(cycleCounter%50==0)readBME280Values();
-  if(cycleCounter%10==0)readTOFValues();
-  
+ /*   Serial.println("TOF");
+  if(cycleCounter%10==0)readTOFValues();*/
+
+ //   Serial.println("SERIAL");
   if(Serial.available()>0)
   {
     serialContents = Serial.readStringUntil('@');
     parseSerialData();
   }
-  
+
+//  Serial.println("IR");
   updateRawIRData();
   processIRData();
-  /*if(cycleCounter%1==0)
+  if(cycleCounter%20==0)
   {
       printIRPoints();
     printIRData();
-  }*/
+  }
 
-  
+  if(cycleCounter%50==0)
+  {
+    SendVolts();
+  }
 
-  /*Serial.print("LOOPTIME|");
-  Serial.print(millis()-startMil);
-  Serial.print("O_o");*/
+  Serial.print("LOOPTIME|");
+  long timex=millis()-startMil;
+  Serial.print(timex);
+  Serial.print("O_o");
 
   cycleCounter++;
   if(cycleCounter>1000000) cycleCounter=0;
+
+  if(timex<10) delayMicroseconds((10-timex)*1000);
+}
+
+void SendVolts()
+{
+  Serial.print("MAINVOLTS|");
+//  Serial.print(analogRead(PIN_MAINVOLTS));
+
+    
+    int read_raw;
+    adc2_config_channel_atten( ADC2_CHANNEL_0, ADC_ATTEN_11db );
+
+    esp_err_t r = adc2_get_raw( ADC2_CHANNEL_0, ADC_WIDTH_12Bit, &read_raw);
+    if ( r == ESP_OK ) {
+        Serial.print(read_raw);
+    } else if ( r == ESP_ERR_TIMEOUT ) {
+        printf("ADC2 used by Wi-Fi.\n");
+    }
+      Serial.print("O_o");
 }
 
 void parseSerialData()
@@ -123,9 +158,11 @@ void parseSerialData()
   if(msgID=="MANPWR")
   {
       setMotorPower(1,msgData.toInt()/10,true);
-      Serial.println(msgData.toInt());
+       setMotorPower(2,msgData.toInt()/10,true);
+        setMotorPower(3,msgData.toInt()/10,true);
+         setMotorPower(4,msgData.toInt()/10,true);
+      //Serial.println(msgData.toInt());
   }
-
 }
 
 

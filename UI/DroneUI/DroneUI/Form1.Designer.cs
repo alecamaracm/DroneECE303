@@ -38,19 +38,25 @@
             this.buttonModeFlappy = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.buttonStartXBOX = new System.Windows.Forms.Button();
+            this.buttonReloadSerial = new System.Windows.Forms.Button();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.label2 = new System.Windows.Forms.Label();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.timerIRDraw = new System.Windows.Forms.Timer(this.components);
+            this.panel3 = new System.Windows.Forms.Panel();
+            this.trackBar1 = new System.Windows.Forms.TrackBar();
+            this.labelFPS = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.timerUpdateUI = new System.Windows.Forms.Timer(this.components);
+            this.inputSendTimer = new System.Windows.Forms.Timer(this.components);
+            this.inputAdquireTimer = new System.Windows.Forms.Timer(this.components);
             this.motorControl4 = new DroneUI.MotorControl();
             this.motorControl3 = new DroneUI.MotorControl();
             this.motorControl2 = new DroneUI.MotorControl();
             this.motorControl1 = new DroneUI.MotorControl();
-            this.panel3 = new System.Windows.Forms.Panel();
-            this.labelFPS = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.timerUpdateUI = new System.Windows.Forms.Timer(this.components);
-            this.trackBar1 = new System.Windows.Forms.TrackBar();
+            this.labelMainVolts = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -148,6 +154,8 @@
             // panel2
             // 
             this.panel2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel2.Controls.Add(this.buttonStartXBOX);
+            this.panel2.Controls.Add(this.buttonReloadSerial);
             this.panel2.Controls.Add(this.checkBox1);
             this.panel2.Controls.Add(this.label2);
             this.panel2.Controls.Add(this.comboBox1);
@@ -157,11 +165,34 @@
             this.panel2.Size = new System.Drawing.Size(183, 124);
             this.panel2.TabIndex = 9;
             // 
+            // buttonStartXBOX
+            // 
+            this.buttonStartXBOX.BackColor = System.Drawing.Color.LightGreen;
+            this.buttonStartXBOX.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonStartXBOX.Location = new System.Drawing.Point(100, 30);
+            this.buttonStartXBOX.Name = "buttonStartXBOX";
+            this.buttonStartXBOX.Size = new System.Drawing.Size(76, 23);
+            this.buttonStartXBOX.TabIndex = 12;
+            this.buttonStartXBOX.Text = "Start XBOX";
+            this.buttonStartXBOX.UseVisualStyleBackColor = false;
+            this.buttonStartXBOX.Click += new System.EventHandler(this.buttonStartXBOX_Click);
+            // 
+            // buttonReloadSerial
+            // 
+            this.buttonReloadSerial.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonReloadSerial.Location = new System.Drawing.Point(9, 30);
+            this.buttonReloadSerial.Name = "buttonReloadSerial";
+            this.buttonReloadSerial.Size = new System.Drawing.Size(85, 23);
+            this.buttonReloadSerial.TabIndex = 11;
+            this.buttonReloadSerial.Text = "Reload ports";
+            this.buttonReloadSerial.UseVisualStyleBackColor = true;
+            this.buttonReloadSerial.Click += new System.EventHandler(this.buttonReloadSerial_Click);
+            // 
             // checkBox1
             // 
             this.checkBox1.AutoSize = true;
             this.checkBox1.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.checkBox1.Location = new System.Drawing.Point(23, 29);
+            this.checkBox1.Location = new System.Drawing.Point(23, 93);
             this.checkBox1.Name = "checkBox1";
             this.checkBox1.Size = new System.Drawing.Size(133, 25);
             this.checkBox1.TabIndex = 10;
@@ -193,6 +224,66 @@
             this.timerIRDraw.Interval = 50;
             this.timerIRDraw.Tick += new System.EventHandler(this.timerIRDraw_Tick);
             // 
+            // panel3
+            // 
+            this.panel3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel3.Controls.Add(this.labelMainVolts);
+            this.panel3.Controls.Add(this.label5);
+            this.panel3.Controls.Add(this.trackBar1);
+            this.panel3.Controls.Add(this.labelFPS);
+            this.panel3.Controls.Add(this.label3);
+            this.panel3.Location = new System.Drawing.Point(206, 12);
+            this.panel3.Name = "panel3";
+            this.panel3.Size = new System.Drawing.Size(812, 225);
+            this.panel3.TabIndex = 10;
+            // 
+            // trackBar1
+            // 
+            this.trackBar1.Location = new System.Drawing.Point(143, 93);
+            this.trackBar1.Maximum = 1000;
+            this.trackBar1.Name = "trackBar1";
+            this.trackBar1.Size = new System.Drawing.Size(517, 45);
+            this.trackBar1.TabIndex = 2;
+            this.trackBar1.TickFrequency = 100;
+            this.trackBar1.Scroll += new System.EventHandler(this.trackBar1_Scroll);
+            // 
+            // labelFPS
+            // 
+            this.labelFPS.AutoSize = true;
+            this.labelFPS.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelFPS.Location = new System.Drawing.Point(45, 5);
+            this.labelFPS.Name = "labelFPS";
+            this.labelFPS.Size = new System.Drawing.Size(36, 21);
+            this.labelFPS.TabIndex = 1;
+            this.labelFPS.Text = "- - -";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label3.Location = new System.Drawing.Point(7, 5);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(39, 21);
+            this.label3.TabIndex = 0;
+            this.label3.Text = "FPS:";
+            // 
+            // timerUpdateUI
+            // 
+            this.timerUpdateUI.Enabled = true;
+            this.timerUpdateUI.Interval = 1000;
+            this.timerUpdateUI.Tick += new System.EventHandler(this.timerUpdateUI_Tick);
+            // 
+            // inputSendTimer
+            // 
+            this.inputSendTimer.Enabled = true;
+            this.inputSendTimer.Tick += new System.EventHandler(this.inputSendTimer_Tick);
+            // 
+            // inputAdquireTimer
+            // 
+            this.inputAdquireTimer.Enabled = true;
+            this.inputAdquireTimer.Interval = 50;
+            this.inputAdquireTimer.Tick += new System.EventHandler(this.inputAdquireTimer_Tick);
+            // 
             // motorControl4
             // 
             this.motorControl4.Location = new System.Drawing.Point(1024, 378);
@@ -221,52 +312,25 @@
             this.motorControl1.Size = new System.Drawing.Size(188, 235);
             this.motorControl1.TabIndex = 3;
             // 
-            // panel3
+            // labelMainVolts
             // 
-            this.panel3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panel3.Controls.Add(this.trackBar1);
-            this.panel3.Controls.Add(this.labelFPS);
-            this.panel3.Controls.Add(this.label3);
-            this.panel3.Location = new System.Drawing.Point(206, 12);
-            this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(812, 225);
-            this.panel3.TabIndex = 10;
+            this.labelMainVolts.AutoSize = true;
+            this.labelMainVolts.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelMainVolts.Location = new System.Drawing.Point(111, 47);
+            this.labelMainVolts.Name = "labelMainVolts";
+            this.labelMainVolts.Size = new System.Drawing.Size(36, 21);
+            this.labelMainVolts.TabIndex = 4;
+            this.labelMainVolts.Text = "- - -";
             // 
-            // labelFPS
+            // label5
             // 
-            this.labelFPS.AutoSize = true;
-            this.labelFPS.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelFPS.Location = new System.Drawing.Point(45, 5);
-            this.labelFPS.Name = "labelFPS";
-            this.labelFPS.Size = new System.Drawing.Size(36, 21);
-            this.labelFPS.TabIndex = 1;
-            this.labelFPS.Text = "- - -";
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.Location = new System.Drawing.Point(7, 5);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(39, 21);
-            this.label3.TabIndex = 0;
-            this.label3.Text = "FPS:";
-            // 
-            // timerUpdateUI
-            // 
-            this.timerUpdateUI.Enabled = true;
-            this.timerUpdateUI.Interval = 1000;
-            this.timerUpdateUI.Tick += new System.EventHandler(this.timerUpdateUI_Tick);
-            // 
-            // trackBar1
-            // 
-            this.trackBar1.Location = new System.Drawing.Point(143, 93);
-            this.trackBar1.Maximum = 1000;
-            this.trackBar1.Name = "trackBar1";
-            this.trackBar1.Size = new System.Drawing.Size(517, 45);
-            this.trackBar1.TabIndex = 2;
-            this.trackBar1.TickFrequency = 100;
-            this.trackBar1.Scroll += new System.EventHandler(this.trackBar1_Scroll);
+            this.label5.AutoSize = true;
+            this.label5.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label5.Location = new System.Drawing.Point(7, 47);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(103, 21);
+            this.label5.TabIndex = 3;
+            this.label5.Text = "Main voltage:";
             // 
             // Form1
             // 
@@ -321,6 +385,12 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Timer timerUpdateUI;
         private System.Windows.Forms.TrackBar trackBar1;
+        private System.Windows.Forms.Timer inputSendTimer;
+        private System.Windows.Forms.Timer inputAdquireTimer;
+        private System.Windows.Forms.Button buttonStartXBOX;
+        private System.Windows.Forms.Button buttonReloadSerial;
+        private System.Windows.Forms.Label labelMainVolts;
+        private System.Windows.Forms.Label label5;
     }
 }
 

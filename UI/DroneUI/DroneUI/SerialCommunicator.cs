@@ -104,6 +104,7 @@ namespace DroneUI
 
         public void sendMessage(string id,string data)
         {
+            if (port==null||port.IsOpen == false) return;
             port.Write(id);
             port.Write("|");
             port.Write(data);
