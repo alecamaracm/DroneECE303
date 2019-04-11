@@ -86,6 +86,7 @@
             this.checkBox1.TabIndex = 3;
             this.checkBox1.Text = "Enabled";
             this.checkBox1.UseVisualStyleBackColor = true;
+            this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
             // 
             // label2
             // 
@@ -121,7 +122,7 @@
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.PictureBox pictureBox2;
-        private System.Windows.Forms.CheckBox checkBox1;
         private System.Windows.Forms.Label label2;
+        public System.Windows.Forms.CheckBox checkBox1;
     }
 }

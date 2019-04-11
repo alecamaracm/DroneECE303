@@ -20,7 +20,7 @@ namespace DroneUI
 
         public bool logEverything=false;
 
-        SerialCommunicator communicator;        
+        public static SerialCommunicator communicator;        
         flyMode flyMode = flyMode.Flappy;
 
         IRReceivedData IRdata = new IRReceivedData();
@@ -29,6 +29,16 @@ namespace DroneUI
         int loopTimesFORAveraging = 0;
 
         float motorPower; //0-100
+
+        int lastFPS = 0;
+
+        float yawGoal = 0f;
+        float pitchGoal = 0f;
+        float rollGoal = 0;
+
+        float currentPitch = 0f;
+        float currentRoll = 0f;
+        float currentYaw = 0f;
 
         public bool gamepadConnected = false;
 
@@ -48,8 +58,27 @@ namespace DroneUI
         {
             communicator.addHandler("POINTS", handleIRPoints);
             communicator.addHandler("POINTSDT", handleIRPointData);
-            communicator.addHandler("LOOPTIME", handleLoopTime);
+            communicator.addHandler("FPS", handleFPS);
             communicator.addHandler("MAINVOLTS", handleMainVolts);
+            communicator.addHandler("MPOWS", handleMotorPowers);
+            communicator.addHandler("IMUDATA", handleIMUData);
+        }
+
+        private void handleIMUData(string arg1, string[] arg2)
+        {
+            currentPitch=(float)(int.Parse(arg2[0])/100.0);
+            currentRoll = (float)(int.Parse(arg2[1]) / 100.0);
+            currentYaw = (float)(int.Parse(arg2[2]) / 100.0);
+        }
+
+        private void handleMotorPowers(string arg1, string[] arg2)
+        {
+            this.Invoke((MethodInvoker)delegate () {
+                motorControl1.setPower(int.Parse(arg2[0]));
+                motorControl2.setPower(int.Parse(arg2[1]));
+                motorControl3.setPower(int.Parse(arg2[2]));
+                motorControl4.setPower(int.Parse(arg2[3]));
+            });
         }
 
         private void handleMainVolts(string arg1, string[] arg2)
@@ -57,10 +86,9 @@ namespace DroneUI
             voltage =(float)((int.Parse(arg2[0])/4095.0)*13.2);
         }
 
-        private void handleLoopTime(string arg1, string[] arg2)
+        private void handleFPS(string arg1, string[] arg2)
         {
-            loopTimeTOAverage += int.Parse(arg2[0]);
-            loopTimesFORAveraging++;
+            lastFPS = int.Parse(arg2[0]);
         }
 
         private void handleIRPointData(string arg1, string[] arg2)
@@ -79,6 +107,7 @@ namespace DroneUI
         private void button1_Click(object sender, EventArgs e)
         {
             communicator.Connect(comboBox1.SelectedItem.ToString(), SERIAL_SPEED);
+            motorControl1.setEnable(false);
         }                
 
         void DrawIRSSensor()
@@ -182,15 +211,21 @@ namespace DroneUI
 
         private void timerUpdateUI_Tick(object sender, EventArgs e)
         {
-            labelFPS.Text = (int)(1000/(loopTimeTOAverage/loopTimesFORAveraging))+"";
-            loopTimesFORAveraging = 0;
-            loopTimeTOAverage = 0;
+            labelFPS.Text = lastFPS + "";
+          
             labelMainVolts.Text = Math.Round(voltage, 2) + " V";
+
+            goalPitch.Text = Math.Round(pitchGoal, 2)+"°";
+            goalRoll.Text = Math.Round(rollGoal, 2) + "°";
+            goalYaw.Text = Math.Round(yawGoal, 2) + "°";
+            currentPitchV.Text = Math.Round(currentPitch, 2) + "°";
+            currentRollV.Text = Math.Round(currentRoll, 2) + "°";
+            currentYawV.Text = Math.Round(currentYaw, 2) + "°";
         }
 
         private void trackBar1_Scroll(object sender, EventArgs e)
         {
-            
+            motorPower = trackBarThrottle.Value;
         }
 
         private void inputAdquireTimer_Tick(object sender, EventArgs e)
@@ -200,12 +235,6 @@ namespace DroneUI
 
             gamepad = controller.GetState().Gamepad;
             controller.SetVibration(new Vibration() { LeftMotorSpeed = (ushort)(65535 * (gamepad.LeftTrigger / 255)), RightMotorSpeed = (ushort)(65535 * (gamepad.RightTrigger / 255)) });
-
-
-            //motorControl1.setPower((int)(gamepad.LeftTrigger / 2.55));
-            //motorControl2.setPower((int)(gamepad.RightTrigger / 2.55));
-            //
-            // motorControl3.setPower((int)((gamepad.LeftThumbY+32768 )/ 655.55));
 
             motorPower += gamepad.RightTrigger * 0.01f;
             motorPower -= gamepad.LeftTrigger * 0.01f;
@@ -217,12 +246,63 @@ namespace DroneUI
             if (motorPower < 0) motorPower = 0;
             if (motorPower > 100) motorPower = 100;
 
+            trackBarThrottle.Value = (int)motorPower;
 
-            motorControl4.setPower((int)motorPower);
 
-            Console.WriteLine(gamepad.RightTrigger + "");
+            //Do axis goals
+            if (gamepad.LeftThumbX == -32768) gamepad.LeftThumbX = -32767;
+            if (gamepad.LeftThumbY == -32768) gamepad.LeftThumbY = -32767;
+            if (gamepad.RightThumbX == -32768) gamepad.RightThumbX = -32767;
+            if (gamepad.RightThumbY == -32768) gamepad.RightThumbY = -32767;
 
-          
+            if (Math.Abs(gamepad.LeftThumbX)<5000)
+            {
+                rollGoal = 0;
+            }
+            else
+            {
+                if (gamepad.LeftThumbY > 0)
+                {
+                    rollGoal = Map(gamepad.LeftThumbX, 5000, 32767, 0, 25);
+                }
+                else
+                {
+                    rollGoal = Map(gamepad.LeftThumbX, -32768, -5000, -25, 0);
+                }
+            }
+
+            if (Math.Abs(gamepad.LeftThumbY) < 5000)
+            {
+                pitchGoal = 0;
+            }
+            else
+            {
+                if(gamepad.LeftThumbY>0)
+                {
+                    pitchGoal = Map(gamepad.LeftThumbY, 5000, 32767, 0, 25);
+                }
+                else
+                {
+                    pitchGoal = Map(gamepad.LeftThumbY, -32768, -5000, -25, 0);
+                }
+       
+            }
+
+
+            if (Math.Abs(gamepad.RightThumbX) > 5000)
+            {
+                if (gamepad.RightThumbX > 0)
+                {
+                    yawGoal += Map(gamepad.RightThumbX,5000,32767,0,2.1f);
+                }
+                else
+                {
+                    yawGoal += Map(gamepad.RightThumbX, -32768, -5000, -2.1f, 0);
+                }
+            }
+                
+
+
         }
 
 
@@ -248,7 +328,40 @@ namespace DroneUI
         private void inputSendTimer_Tick(object sender, EventArgs e)
         {
             communicator.sendMessage("MANPWR", (int)(motorPower*10) + "");
+            communicator.sendMessage("CDATA",(int)(pitchGoal*-100)+"|"+(int)(rollGoal*-100)+"|"+(int)(yawGoal*100));
         }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            communicator.Disconnect();
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            motorControl1.setEnable(true);
+            motorControl3.setEnable(true);
+            motorControl2.setEnable(true);
+            motorControl4.setEnable(true);
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            motorControl1.setEnable(false);
+            motorControl3.setEnable(false);
+            motorControl2.setEnable(false);
+            motorControl4.setEnable(false);
+        }
+
+        private void numericUpDownFPSGoal_ValueChanged(object sender, EventArgs e)
+        {
+            communicator.sendMessage("FPSGOAL", numericUpDownFPSGoal.Value+"");
+        }
+
+        public static float Map(float value, float fromSource, float toSource, float fromTarget, float toTarget)
+        {
+            return (value - fromSource) / (toSource - fromSource) * (toTarget - fromTarget) + fromTarget;
+        }
+
     }
 
     public enum flyMode

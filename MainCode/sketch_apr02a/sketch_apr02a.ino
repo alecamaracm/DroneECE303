@@ -1,4 +1,5 @@
 #include "pinDefinitions.cpp"
+#include "PIDconstants.cpp"
 
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
@@ -8,8 +9,8 @@
 #include <VL53L0X.h>
 
 #define SEALEVELPRESSURE_HPA (1013.25)
+#define MAX_PITCHROLL_GOAL 25
 
-int cycleCounter=0; //At 1.000.000, reset
 
 //Serial
 String serialContents;
@@ -17,7 +18,9 @@ String serialContents;
 //PWM output stuff
 int PWM_freq=50;
 int pwmData[16];
+bool motorEnabled[4];
 bool newPWMDataToOutput=false;
+int lastMotorPowers[4];
 hw_timer_t * PWMtimer = NULL;
 
 //IR positioning stuff
@@ -29,6 +32,15 @@ int IRv1[4]; //X1,Y1,X2,Y2
 bool IRDataFine=true;
 int IrTLeft,IrTRight,IrTBack,IrTMiddle;
 
+//FPS
+int FPSgoal=100;
+long startMicro=0; //When the loop started
+long timeTaken=0;  //Time taken to complete a loop
+int cycleCounter=0; //At 1.000.000, reset
+
+int lastSecondMillis=0;
+int FPScounter=0;
+
 //BME280
 Adafruit_BME280 bme;
 float temperature,humidity,baromPressure;
@@ -36,7 +48,20 @@ float temperature,humidity,baromPressure;
 //IMU
 Adafruit_BNO055 bno = Adafruit_BNO055();
 uint8_t sysCal, gyroCal, accelCal, magCal = 0;
-imu::Vector<3> IMUAngles;
+float imuX,imuY,imuZ;  //X is yaw. Y is roll and Z is pitch
+float lastImuX,lastImuY,lastImuZ;
+float imuCalX,imuCalY,imuCalZ;
+float imuXspeed,imuYspeed,imuZspeed;
+float imuErrorX,imuErrorY,imuErrorZ;
+float imuCalcPitch,imuCalcRoll,imuCalcYaw;
+float imuCalcM1,imuCalcM2,imuCalcM3,imuCalcM4;
+
+//Controls
+float XBOXthrottleGoal=0;
+float XBOXpitchGoal,XBOXrollGoal,XBOXyawGoal;
+
+
+
 
 //VL53LOX
 VL53L0X sensor;
@@ -84,31 +109,29 @@ void initializeSensors()
   sensor.setVcselPulsePeriod(VL53L0X::VcselPeriodPreRange, 18);
   sensor.setVcselPulsePeriod(VL53L0X::VcselPeriodFinalRange, 14);
 
-  delay(3000);
-
+  delay(2000);
   bno.setExtCrystalUse(true);
+  delay(1000);
+  
+  readIMUValues();
+  imuCalibrate();
 }
 
-int startMil=0;
+
 void loop() {
 
-  startMil=millis();
+  startMicro=micros();
 
-//  Serial.println("IMU");
   readIMUValues();
- //   Serial.println("BME");
   if(cycleCounter%50==0)readBME280Values();
- /*   Serial.println("TOF");
-  if(cycleCounter%10==0)readTOFValues();*/
 
- //   Serial.println("SERIAL");
   if(Serial.available()>0)
   {
     serialContents = Serial.readStringUntil('@');
     parseSerialData();
   }
 
-//  Serial.println("IR");
+
   updateRawIRData();
   processIRData();
   if(cycleCounter%20==0)
@@ -122,15 +145,90 @@ void loop() {
     SendVolts();
   }
 
-  Serial.print("LOOPTIME|");
-  long timex=millis()-startMil;
-  Serial.print(timex);
-  Serial.print("O_o");
+  if(cycleCounter%10==0)
+  {
+    SendCurrentMotorPower();
+  }
+
+  if(cycleCounter%20==0)
+  {
+    sendIMUData();
+  }
+
+
+  doPIDWork();
+  
+  
 
   cycleCounter++;
   if(cycleCounter>1000000) cycleCounter=0;
 
-  if(timex<10) delayMicroseconds((10-timex)*1000);
+  timeTaken=micros()-startMicro; 
+  if(timeTaken<(1000000/FPSgoal) && timeTaken>0) delayMicroseconds((1000000/FPSgoal)-timeTaken);
+  
+  if(lastSecondMillis/1000!=millis()/1000)  //We are in a different second, send the FPS
+  {
+    Serial.print("FPS|");
+    Serial.print(FPScounter+1);
+    Serial.print("O_o");
+    FPScounter=0;
+    lastSecondMillis=millis();
+  }else
+  {
+    FPScounter++;
+  }
+
+  
+}
+
+void sendIMUData()
+{
+  Serial.print("IMUDATA|");
+  Serial.print((int)(imuZ*100));
+  Serial.print("|");
+  Serial.print((int)(imuY*100));
+  Serial.print("|");
+  Serial.print((int)(imuX*100));
+  Serial.print("O_o");
+}
+
+void imuCalibrate()
+{
+  imuCalX=imuX;
+  imuCalY=imuY;
+  imuCalZ=imuZ;
+}
+
+void doPIDWork()
+{
+    imuErrorX=imuX-XBOXyawGoal;
+    imuErrorY=imuY-XBOXrollGoal;
+    imuErrorZ=imuZ-XBOXpitchGoal;
+    
+    imuCalcPitch=constrain(XBOX_KP*imuErrorZ+XBOX_KD*imuZspeed+XBOX_KI*0,-XBOX_PITCH_MAX_CHANGE,XBOX_PITCH_MAX_CHANGE);
+    imuCalcRoll=constrain(XBOX_KP*imuErrorY+XBOX_KD*imuYspeed+XBOX_KI*0,-XBOX_ROLL_MAX_CHANGE,XBOX_ROLL_MAX_CHANGE);
+  //  imuCalcYaw=constrain(XBOX_KP_YAW*imuErrorX+XBOX_KD_YAW*imuXspeed+XBOX_KD_YAW*0,-XBOX_YAW_MAX_CHANGE,XBOX_YAW_MAX_CHANGE);
+
+    imuCalcM1=XBOXthrottleGoal-imuCalcPitch-imuCalcRoll+imuCalcYaw;
+    imuCalcM2=XBOXthrottleGoal+imuCalcPitch-imuCalcRoll-imuCalcYaw;
+    imuCalcM3=XBOXthrottleGoal-imuCalcPitch+imuCalcRoll-imuCalcYaw;
+    imuCalcM4=XBOXthrottleGoal+imuCalcPitch+imuCalcRoll+imuCalcYaw;
+
+    constrain(imuCalcM1,0,100);
+    constrain(imuCalcM2,0,100);
+    constrain(imuCalcM3,0,100);
+    constrain(imuCalcM4,0,100);
+
+    setMotorPower(0,imuCalcM1,false);
+    setMotorPower(1,imuCalcM2,false);
+    setMotorPower(2,imuCalcM3,false);
+    setMotorPower(3,imuCalcM4,true);
+        
+ /*   Serial.println();
+    Serial.println(imuX);
+    Serial.println(imuY);
+    Serial.println(imuZ);
+    delay(1000);*/
 }
 
 void SendVolts()
@@ -151,17 +249,61 @@ void SendVolts()
       Serial.print("O_o");
 }
 
+void SendCurrentMotorPower()
+{
+  Serial.print("MPOWS|");
+  Serial.print(lastMotorPowers[0]);
+  Serial.print("|");
+  Serial.print(lastMotorPowers[1]);
+  Serial.print("|");
+  Serial.print(lastMotorPowers[2]);
+  Serial.print("|");
+  Serial.print(lastMotorPowers[3]);
+  Serial.print("O_o");
+}
+
+float pitchToWrite,rollToWrite,yawToWrite=0;
+int temp1,temp2,temp3;
 void parseSerialData()
 {
   String msgID=serialContents.substring(0,serialContents.indexOf("|"));
   String msgData=serialContents.substring(serialContents.indexOf("|")+1);
   if(msgID=="MANPWR")
   {
-      setMotorPower(1,msgData.toInt()/10,true);
-       setMotorPower(2,msgData.toInt()/10,true);
-        setMotorPower(3,msgData.toInt()/10,true);
-         setMotorPower(4,msgData.toInt()/10,true);
-      //Serial.println(msgData.toInt());
+    XBOXthrottleGoal=msgData.toInt()/10;
+      /*setMotorPower(0,msgData.toInt()/10,false); //Receives a number between 1000 and 0
+      setMotorPower(1,msgData.toInt()/10,false);
+      setMotorPower(2,msgData.toInt()/10,false);
+      setMotorPower(3,msgData.toInt()/10,true);  */    
+  }else if(msgID=="MOTOREN")
+  {
+      int motorID=msgData.substring(0,1).toInt();
+      if(motorID<0||motorID>3) return;
+      if(msgData.substring(1)=="on") //Enable motor
+      {
+        motorEnabled[motorID]=true;
+      }else //Disable motor
+      {
+        motorEnabled[motorID]=false;
+      }
+
+      setMotorPower(motorID,-1,true); //We send a power of -1 to avoid overriding it, we only want the method to update the pwm based on the motor being enabled or not      
+  }else if(msgID=="FPSGOAL")
+  {   
+       int newGoal=msgData.toInt();
+       if(newGoal>0) FPSgoal=newGoal;       
+  }else if(msgID=="CDATA")
+  {
+    temp1=msgData.indexOf("|");
+    temp2=msgData.indexOf("|",temp1+1);
+    
+    pitchToWrite=msgData.substring(0,temp1).toInt()/100.0f;
+    rollToWrite=msgData.substring(temp1+1,temp2).toInt()/100.0f;
+    yawToWrite=msgData.substring(temp2+1).toInt()/100.0f;
+
+    if(pitchToWrite>-MAX_PITCHROLL_GOAL && pitchToWrite<MAX_PITCHROLL_GOAL) XBOXpitchGoal=pitchToWrite;
+    if(rollToWrite>-MAX_PITCHROLL_GOAL && rollToWrite<MAX_PITCHROLL_GOAL) XBOXrollGoal=rollToWrite;
+    XBOXyawGoal=yawToWrite;
   }
 }
 
@@ -173,8 +315,23 @@ void readTOFValues()
 
 void readIMUValues()
 {  
+  sensors_event_t event;
+  bno.getEvent(&event);
+
+  
+  lastImuX=imuX;
+  lastImuY=imuY;
+  lastImuZ=imuZ;
+  imuX=(float)event.orientation.x-imuCalX;
+  imuY=(float)event.orientation.y-imuCalY;
+  imuZ=(float)event.orientation.z-imuCalZ;
+  imuXspeed=imuX-lastImuX;
+  imuYspeed=imuY-lastImuY;
+  imuZspeed=imuZ-lastImuZ;
+  
   bno.getCalibration(&sysCal, &gyroCal, &accelCal, &magCal);
-  IMUAngles = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+
+  
 }
 
 void readBME280Values()
@@ -186,9 +343,21 @@ void readBME280Values()
 
 void setMotorPower(int motorID,float power,bool sendUpdate)
 {
-  if(motorID>15) return;
+  if(motorID>3) return;
   
-  pwmData[motorID-1]=4096-(205+((power/100)*205));
+  if(motorEnabled[motorID]==true)
+  {
+    if(power==-1)power=lastMotorPowers[motorID]; //power of -1 means no change
+    if(power>100)power=100;
+    if(power<0)power=0;
+    pwmData[motorID]=4096-(205+((power/100)*205));
+    lastMotorPowers[motorID]=(int)power;
+  }else
+  {
+    pwmData[motorID]=4096-205;
+    lastMotorPowers[motorID]=0;
+  }
+  
   //pwmData[motorID]=(power/100)*4095;
   
   if(sendUpdate)
@@ -200,6 +369,8 @@ void setMotorPower(int motorID,float power,bool sendUpdate)
 
 void startPWM()
 {
+  for(int i=0;i<4;i++) motorEnabled[i]=false;
+  
   PWMtimer = timerBegin(1, 10, true);  //8,000,000
   timerAttachInterrupt(PWMtimer, &onPWMTimer, true);
   timerAlarmWrite(PWMtimer, 8000000/PWM_freq, true);
@@ -210,7 +381,7 @@ void startPWM()
   ledcAttachPin(PIN_PWM_GSCLK, 0);
 
   for(int i=0;i<16;i++)  pwmData[i]=4096-(205);
-  newPWMDataToOutput=true;
+
 
   pinMode(PIN_PWM_BLANK,OUTPUT);
   pinMode(PIN_PWM_SCLK,OUTPUT);
@@ -222,6 +393,8 @@ void startPWM()
   digitalWrite(PIN_PWM_SCLK,LOW);
   digitalWrite(PIN_PWM_LATCH,LOW);  //HIGH pulse of at least 20ns after sending the data to activate it 
   digitalWrite(PIN_PWM_SIN,LOW);
+
+  newPWMDataToOutput=true;
 }
 
 void onPWMTimer()
@@ -361,8 +534,8 @@ int getAngle(int x1,int y1,int x2, int y2)
 {
   int dotPro=x1*x2+y1*y2;
   float mags=sqrt(pow(x1,2)+pow(y1,2))*sqrt(pow(x2,2)+pow(y2,2));
-
-
+  
+  
   return (int)(acos(dotPro/mags)*58.252427f);
 }
 
@@ -391,7 +564,7 @@ void printIRPoints()
         Serial.print("|");
     }
      Serial.print("O_o");
-
+    
 }
 
 void Write_2IRbytes(byte d1, byte d2)

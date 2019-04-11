@@ -115,5 +115,10 @@ namespace DroneUI
         {
             sendMessage(id, String.Join("|", data));
         }
+
+        public void Disconnect()
+        {
+            port.Close();
+        }
     }
 }

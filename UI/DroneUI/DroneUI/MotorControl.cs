@@ -12,7 +12,20 @@ namespace DroneUI
 {
     public partial class MotorControl : UserControl
     {
-        int currentPower = 100;
+        int currentPower = 0;
+        int id = 0;
+
+        public int motorID
+        {
+            get
+            {
+                return id;
+            }
+            set
+            {
+                id = value;
+            }
+        }
 
         public MotorControl()
         {
@@ -34,6 +47,7 @@ namespace DroneUI
         public void setEnable(bool enabled)
         {
             checkBox1.Checked = enabled;
+            checkBox1_CheckedChanged(checkBox1, null);
         }
 
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
@@ -42,5 +56,10 @@ namespace DroneUI
 
             e.Graphics.FillRectangle(brush,0, e.ClipRectangle.Height * (1-(currentPower / 100.0f)),e.ClipRectangle.Width, e.ClipRectangle.Height * ((currentPower / 100.0f)));
         }
-    }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            Form1.communicator.sendMessage("MOTOREN", id + (checkBox1.Checked?"on":"off"));
+        }
+    }    
 }
