@@ -46,6 +46,14 @@
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.timerIRDraw = new System.Windows.Forms.Timer(this.components);
             this.panel3 = new System.Windows.Forms.Panel();
+            this.labelErrorsDrone = new System.Windows.Forms.Label();
+            this.label14 = new System.Windows.Forms.Label();
+            this.labelErrorsPC = new System.Windows.Forms.Label();
+            this.label17 = new System.Windows.Forms.Label();
+            this.labelDownloadSpeed = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
+            this.labelUploadSpeed = new System.Windows.Forms.Label();
+            this.label13 = new System.Windows.Forms.Label();
             this.currentYawV = new System.Windows.Forms.Label();
             this.currentRollV = new System.Windows.Forms.Label();
             this.currentPitchV = new System.Windows.Forms.Label();
@@ -74,6 +82,8 @@
             this.motorControl2 = new DroneUI.MotorControl();
             this.motorControl3 = new DroneUI.MotorControl();
             this.motorControl1 = new DroneUI.MotorControl();
+            this.label5VAmps = new System.Windows.Forms.Label();
+            this.label16 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -258,6 +268,16 @@
             // panel3
             // 
             this.panel3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel3.Controls.Add(this.label5VAmps);
+            this.panel3.Controls.Add(this.label16);
+            this.panel3.Controls.Add(this.labelErrorsDrone);
+            this.panel3.Controls.Add(this.label14);
+            this.panel3.Controls.Add(this.labelErrorsPC);
+            this.panel3.Controls.Add(this.label17);
+            this.panel3.Controls.Add(this.labelDownloadSpeed);
+            this.panel3.Controls.Add(this.label15);
+            this.panel3.Controls.Add(this.labelUploadSpeed);
+            this.panel3.Controls.Add(this.label13);
             this.panel3.Controls.Add(this.currentYawV);
             this.panel3.Controls.Add(this.currentRollV);
             this.panel3.Controls.Add(this.currentPitchV);
@@ -284,6 +304,92 @@
             this.panel3.Name = "panel3";
             this.panel3.Size = new System.Drawing.Size(812, 225);
             this.panel3.TabIndex = 10;
+            // 
+            // labelErrorsDrone
+            // 
+            this.labelErrorsDrone.AutoSize = true;
+            this.labelErrorsDrone.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelErrorsDrone.ForeColor = System.Drawing.Color.Tomato;
+            this.labelErrorsDrone.Location = new System.Drawing.Point(363, 81);
+            this.labelErrorsDrone.Name = "labelErrorsDrone";
+            this.labelErrorsDrone.Size = new System.Drawing.Size(31, 17);
+            this.labelErrorsDrone.TabIndex = 36;
+            this.labelErrorsDrone.Text = "- - -";
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Font = new System.Drawing.Font("Segoe UI", 9.75F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label14.ForeColor = System.Drawing.Color.Brown;
+            this.label14.Location = new System.Drawing.Point(234, 81);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(126, 17);
+            this.label14.TabIndex = 35;
+            this.label14.Text = "Serial drone errors:";
+            // 
+            // labelErrorsPC
+            // 
+            this.labelErrorsPC.AutoSize = true;
+            this.labelErrorsPC.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelErrorsPC.ForeColor = System.Drawing.Color.Tomato;
+            this.labelErrorsPC.Location = new System.Drawing.Point(363, 60);
+            this.labelErrorsPC.Name = "labelErrorsPC";
+            this.labelErrorsPC.Size = new System.Drawing.Size(31, 17);
+            this.labelErrorsPC.TabIndex = 34;
+            this.labelErrorsPC.Text = "- - -";
+            this.labelErrorsPC.Click += new System.EventHandler(this.labelErrorsPC_Click);
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Font = new System.Drawing.Font("Segoe UI", 9.75F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label17.ForeColor = System.Drawing.Color.Brown;
+            this.label17.Location = new System.Drawing.Point(254, 61);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(106, 17);
+            this.label17.TabIndex = 33;
+            this.label17.Text = "Serial PC errors:";
+            // 
+            // labelDownloadSpeed
+            // 
+            this.labelDownloadSpeed.AutoSize = true;
+            this.labelDownloadSpeed.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelDownloadSpeed.Location = new System.Drawing.Point(368, 31);
+            this.labelDownloadSpeed.Name = "labelDownloadSpeed";
+            this.labelDownloadSpeed.Size = new System.Drawing.Size(36, 21);
+            this.labelDownloadSpeed.TabIndex = 32;
+            this.labelDownloadSpeed.Text = "- - -";
+            this.labelDownloadSpeed.Click += new System.EventHandler(this.label14_Click);
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label15.Location = new System.Drawing.Point(233, 31);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(129, 21);
+            this.label15.TabIndex = 31;
+            this.label15.Text = "Download speed:";
+            // 
+            // labelUploadSpeed
+            // 
+            this.labelUploadSpeed.AutoSize = true;
+            this.labelUploadSpeed.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelUploadSpeed.Location = new System.Drawing.Point(368, 7);
+            this.labelUploadSpeed.Name = "labelUploadSpeed";
+            this.labelUploadSpeed.Size = new System.Drawing.Size(36, 21);
+            this.labelUploadSpeed.TabIndex = 30;
+            this.labelUploadSpeed.Text = "- - -";
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label13.Location = new System.Drawing.Point(254, 7);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(108, 21);
+            this.label13.TabIndex = 29;
+            this.label13.Text = "Upload speed:";
             // 
             // currentYawV
             // 
@@ -522,6 +628,7 @@
             // inputSendTimer
             // 
             this.inputSendTimer.Enabled = true;
+            this.inputSendTimer.Interval = 200;
             this.inputSendTimer.Tick += new System.EventHandler(this.inputSendTimer_Tick);
             // 
             // inputAdquireTimer
@@ -561,6 +668,26 @@
             this.motorControl1.Name = "motorControl1";
             this.motorControl1.Size = new System.Drawing.Size(188, 235);
             this.motorControl1.TabIndex = 3;
+            // 
+            // label5VAmps
+            // 
+            this.label5VAmps.AutoSize = true;
+            this.label5VAmps.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label5VAmps.Location = new System.Drawing.Point(82, 73);
+            this.label5VAmps.Name = "label5VAmps";
+            this.label5VAmps.Size = new System.Drawing.Size(36, 21);
+            this.label5VAmps.TabIndex = 38;
+            this.label5VAmps.Text = "- - -";
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label16.Location = new System.Drawing.Point(8, 73);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(74, 21);
+            this.label16.TabIndex = 37;
+            this.label16.Text = "5V amps:";
             // 
             // Form1
             // 
@@ -639,6 +766,16 @@
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label labelDownloadSpeed;
+        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.Label labelUploadSpeed;
+        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.Label labelErrorsDrone;
+        private System.Windows.Forms.Label label14;
+        private System.Windows.Forms.Label labelErrorsPC;
+        private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.Label label5VAmps;
+        private System.Windows.Forms.Label label16;
     }
 }
 

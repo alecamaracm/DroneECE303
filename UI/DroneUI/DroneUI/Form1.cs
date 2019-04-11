@@ -16,7 +16,7 @@ namespace DroneUI
 {
     public partial class Form1 : Form
     {
-        public const int SERIAL_SPEED = 115200;
+        public const int SERIAL_SPEED = 38400;
 
         public bool logEverything=false;
 
@@ -25,8 +25,8 @@ namespace DroneUI
 
         IRReceivedData IRdata = new IRReceivedData();
 
-        float loopTimeTOAverage = 0;
-        int loopTimesFORAveraging = 0;
+       
+
 
         float motorPower; //0-100
 
@@ -46,6 +46,8 @@ namespace DroneUI
         Controller controller;
         Gamepad gamepad;
 
+        float ampsM1, ampsM2, ampsM3, ampsM4, amps5V;
+
         public Form1()
         {
             communicator = new SerialCommunicator(LogSerialMessage,Log);
@@ -62,6 +64,22 @@ namespace DroneUI
             communicator.addHandler("MAINVOLTS", handleMainVolts);
             communicator.addHandler("MPOWS", handleMotorPowers);
             communicator.addHandler("IMUDATA", handleIMUData);
+            communicator.addHandler("SERIALERR", handleSerialError);
+            communicator.addHandler("AMPS", ampsHandler);
+        }
+
+        private void ampsHandler(string arg1, string[] arg2)
+        {
+            //amps5V =(float)(((((int.Parse(arg2[0]) - 2418)/4096.0f)*3.3)*1.6061f)/0.066);
+            ampsM1 = (float)(((((int.Parse(arg2[1]) - 2314) / 4096.0f) * 3.3) * 1.6061f) / 0.066);
+            ampsM2 = (float)(((((int.Parse(arg2[2]) - 2314) / 4096.0f) * 3.3) * 1.6061f) / 0.066);
+            ampsM3 = (float)(((((int.Parse(arg2[3]) - 2314) / 4096.0f) * 3.3) * 1.6061f) / 0.066);
+            ampsM4 = (float)(((((int.Parse(arg2[4]) - 2314) / 4096.0f) * 3.3) * 1.6061f) / 0.066);
+        }
+
+        private void handleSerialError(string arg1, string[] arg2)
+        {
+            communicator.errorsSerialDrone++;
         }
 
         private void handleIMUData(string arg1, string[] arg2)
@@ -212,7 +230,13 @@ namespace DroneUI
         private void timerUpdateUI_Tick(object sender, EventArgs e)
         {
             labelFPS.Text = lastFPS + "";
-          
+
+            label5VAmps.Text = amps5V+"";
+            motorControl1.setAmps(ampsM1);
+            motorControl2.setAmps(ampsM2);
+            motorControl3.setAmps(ampsM3);
+            motorControl4.setAmps(ampsM4);
+
             labelMainVolts.Text = Math.Round(voltage, 2) + " V";
 
             goalPitch.Text = Math.Round(pitchGoal, 2)+"°";
@@ -221,6 +245,12 @@ namespace DroneUI
             currentPitchV.Text = Math.Round(currentPitch, 2) + "°";
             currentRollV.Text = Math.Round(currentRoll, 2) + "°";
             currentYawV.Text = Math.Round(currentYaw, 2) + "°";
+
+            labelUploadSpeed.Text = Math.Round((double)communicator.uploadSpeed / 1000,2)+"KB/s";
+            labelDownloadSpeed.Text = Math.Round((double)communicator.downloadSpeed / 1000, 2) + "KB/s";
+
+            labelErrorsDrone.Text = communicator.errorsSerialDroneSec + " err/min";
+            labelErrorsPC.Text = communicator.errorsSerialPCSec + " err/min";
         }
 
         private void trackBar1_Scroll(object sender, EventArgs e)
@@ -263,11 +293,11 @@ namespace DroneUI
             {
                 if (gamepad.LeftThumbY > 0)
                 {
-                    rollGoal = Map(gamepad.LeftThumbX, 5000, 32767, 0, 25);
+                    rollGoal = Map(gamepad.LeftThumbX, 5000, 32790, 0, 25);
                 }
                 else
                 {
-                    rollGoal = Map(gamepad.LeftThumbX, -32768, -5000, -25, 0);
+                    rollGoal = Map(gamepad.LeftThumbX, -32790, -5000, -25, 0);
                 }
             }
 
@@ -279,11 +309,11 @@ namespace DroneUI
             {
                 if(gamepad.LeftThumbY>0)
                 {
-                    pitchGoal = Map(gamepad.LeftThumbY, 5000, 32767, 0, 25);
+                    pitchGoal = Map(gamepad.LeftThumbY, 5000, 32790, 0, 25);
                 }
                 else
                 {
-                    pitchGoal = Map(gamepad.LeftThumbY, -32768, -5000, -25, 0);
+                    pitchGoal = Map(gamepad.LeftThumbY, -32790, -5000, -25, 0);
                 }
        
             }
@@ -297,7 +327,7 @@ namespace DroneUI
                 }
                 else
                 {
-                    yawGoal += Map(gamepad.RightThumbX, -32768, -5000, -2.1f, 0);
+                    yawGoal += Map(gamepad.RightThumbX, -32790, -5000, -2.1f, 0);
                 }
             }
                 
@@ -362,6 +392,15 @@ namespace DroneUI
             return (value - fromSource) / (toSource - fromSource) * (toTarget - fromTarget) + fromTarget;
         }
 
+        private void label14_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void labelErrorsPC_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 
     public enum flyMode

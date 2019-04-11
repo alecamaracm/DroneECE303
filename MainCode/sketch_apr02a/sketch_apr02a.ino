@@ -1,3 +1,5 @@
+#include <driver/adc.h>
+
 #include "pinDefinitions.cpp"
 #include "PIDconstants.cpp"
 
@@ -5,7 +7,7 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <Adafruit_BME280.h>
-#include <driver/adc.h>
+
 #include <VL53L0X.h>
 
 #define SEALEVELPRESSURE_HPA (1013.25)
@@ -13,7 +15,8 @@
 
 
 //Serial
-String serialContents;
+String serialContents,msgID,msgLen,msgData;
+char outputSerial[200];
 
 //PWM output stuff
 int PWM_freq=50;
@@ -71,14 +74,20 @@ float TOFAltitude;
 
 void setup() {
 Serial.begin(115200);
+ Serial2.begin(38400,SERIAL_8N1,25,26);
 
 serialContents.reserve(150);
-  
+msgID.reserve(25);
+msgLen.reserve(25);
+msgData.reserve(150);
+
   startPWM();   
   pinMode(PIN_BUZZER,OUTPUT);
 
-  initializeSensors();
+  initializeSensors(); 
+  
 
+  
 
   digitalWrite(PIN_BUZZER,HIGH);
   delay(2500);
@@ -92,11 +101,11 @@ void initializeSensors()
   if(!bno.begin())
   {
     /* There was a problem detecting the BNO055 ... check your connections */
-    Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
+    Serial2.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
     while(1);
   }
   if (!bme.begin()) {
-      Serial.println("Could not find a valid BME280 sensor, check wiring!");
+      Serial2.println("Could not find a valid BME280 sensor, check wiring!");
       while (1);
   }
   
@@ -123,36 +132,42 @@ void loop() {
   startMicro=micros();
 
   readIMUValues();
-  if(cycleCounter%50==0)readBME280Values();
+  if(cycleCounter%(FPSgoal/2)==10)readBME280Values();
 
-  if(Serial.available()>0)
+  if(Serial2.available()>0)
   {
-    serialContents = Serial.readStringUntil('@');
+    serialContents = Serial2.readStringUntil('@');
     parseSerialData();
   }
 
 
   updateRawIRData();
   processIRData();
-  if(cycleCounter%20==0)
+  
+  if(cycleCounter%(FPSgoal/3)==0)
   {
       printIRPoints();
     printIRData();
   }
 
-  if(cycleCounter%50==0)
+  if(cycleCounter%(FPSgoal/2)==5)
   {
     SendVolts();
   }
 
-  if(cycleCounter%10==0)
+  if(cycleCounter%(FPSgoal/5)==1)
   {
     SendCurrentMotorPower();
   }
 
-  if(cycleCounter%20==0)
+  if(cycleCounter%(FPSgoal/5)==8)
   {
     sendIMUData();
+  }
+
+   if(cycleCounter%(FPSgoal/2)==3)
+  {
+    sendCurrentData();
   }
 
 
@@ -168,9 +183,8 @@ void loop() {
   
   if(lastSecondMillis/1000!=millis()/1000)  //We are in a different second, send the FPS
   {
-    Serial.print("FPS|");
-    Serial.print(FPScounter+1);
-    Serial.print("O_o");
+    sprintf(outputSerial,"%d",FPScounter+1);
+    sendOutputMessage("FPS");    
     FPScounter=0;
     lastSecondMillis=millis();
   }else
@@ -183,13 +197,8 @@ void loop() {
 
 void sendIMUData()
 {
-  Serial.print("IMUDATA|");
-  Serial.print((int)(imuZ*100));
-  Serial.print("|");
-  Serial.print((int)(imuY*100));
-  Serial.print("|");
-  Serial.print((int)(imuX*100));
-  Serial.print("O_o");
+  sprintf(outputSerial,"%d|%d|%d",(int)(imuZ*100),(int)(imuY*100),(int)(imuX*100));
+  sendOutputMessage("IMUDATA");
 }
 
 void imuCalibrate()
@@ -205,8 +214,8 @@ void doPIDWork()
     imuErrorY=imuY-XBOXrollGoal;
     imuErrorZ=imuZ-XBOXpitchGoal;
     
-    imuCalcPitch=constrain(XBOX_KP*imuErrorZ+XBOX_KD*imuZspeed+XBOX_KI*0,-XBOX_PITCH_MAX_CHANGE,XBOX_PITCH_MAX_CHANGE);
-    imuCalcRoll=constrain(XBOX_KP*imuErrorY+XBOX_KD*imuYspeed+XBOX_KI*0,-XBOX_ROLL_MAX_CHANGE,XBOX_ROLL_MAX_CHANGE);
+    imuCalcPitch=constrain(XBOX_KP*imuErrorZ-XBOX_KD*imuZspeed+XBOX_KI*0,-XBOX_PITCH_MAX_CHANGE,XBOX_PITCH_MAX_CHANGE);
+    imuCalcRoll=constrain(XBOX_KP*imuErrorY-XBOX_KD*imuYspeed+XBOX_KI*0,-XBOX_ROLL_MAX_CHANGE,XBOX_ROLL_MAX_CHANGE);
   //  imuCalcYaw=constrain(XBOX_KP_YAW*imuErrorX+XBOX_KD_YAW*imuXspeed+XBOX_KD_YAW*0,-XBOX_YAW_MAX_CHANGE,XBOX_YAW_MAX_CHANGE);
 
     imuCalcM1=XBOXthrottleGoal-imuCalcPitch-imuCalcRoll+imuCalcYaw;
@@ -232,42 +241,73 @@ void doPIDWork()
 }
 
 void SendVolts()
-{
-  Serial.print("MAINVOLTS|");
-//  Serial.print(analogRead(PIN_MAINVOLTS));
-
-    
+{    
     int read_raw;
     adc2_config_channel_atten( ADC2_CHANNEL_0, ADC_ATTEN_11db );
 
     esp_err_t r = adc2_get_raw( ADC2_CHANNEL_0, ADC_WIDTH_12Bit, &read_raw);
     if ( r == ESP_OK ) {
-        Serial.print(read_raw);
-    } else if ( r == ESP_ERR_TIMEOUT ) {
-        printf("ADC2 used by Wi-Fi.\n");
-    }
-      Serial.print("O_o");
+        sprintf(outputSerial,"%d",read_raw);
+        sendOutputMessage("MAINVOLTS");
+    }    
+}
+
+int adcAmp1,adcAmp2,adcAmp3,adcAmp4,adcAmp5V;
+
+void sendCurrentData()
+{
+  adc1_config_channel_atten( PIN_AMP_M1, ADC_ATTEN_11db );
+  adc1_config_channel_atten( PIN_AMP_M2, ADC_ATTEN_11db );
+  adc1_config_channel_atten( PIN_AMP_M3, ADC_ATTEN_11db );
+  adc1_config_channel_atten( PIN_AMP_M4, ADC_ATTEN_11db );
+  adc2_config_channel_atten( PIN_AMP_5V, ADC_ATTEN_11db );
+
+  adc2_get_raw( PIN_AMP_5V, ADC_WIDTH_12Bit, &adcAmp5V);
+  adcAmp1=adc1_get_raw(PIN_AMP_M1);
+  adcAmp2=adc1_get_raw(PIN_AMP_M2);
+  adcAmp3=adc1_get_raw(PIN_AMP_M3);
+  adcAmp4=adc1_get_raw(PIN_AMP_M4);
+
+  sprintf(outputSerial,"%d|%d|%d|%d|%d",adcAmp5V,adcAmp1,adcAmp2,adcAmp3,adcAmp4);
+  sendOutputMessage("AMPS");
+
+}
+
+void sendOutputMessage(char *key)
+{
+  Serial2.print(key);
+  Serial2.print("|");
+  Serial2.print(strlen(outputSerial)+strlen(key));
+  Serial2.print("|");
+  Serial2.print(outputSerial);
+  Serial2.print("O_o");
+  memset(outputSerial, 0, 200);
 }
 
 void SendCurrentMotorPower()
-{
-  Serial.print("MPOWS|");
-  Serial.print(lastMotorPowers[0]);
-  Serial.print("|");
-  Serial.print(lastMotorPowers[1]);
-  Serial.print("|");
-  Serial.print(lastMotorPowers[2]);
-  Serial.print("|");
-  Serial.print(lastMotorPowers[3]);
-  Serial.print("O_o");
+{  
+  sprintf(outputSerial,"%d|%d|%d|%d",lastMotorPowers[0],lastMotorPowers[1],lastMotorPowers[2],lastMotorPowers[3]);
+  sendOutputMessage("MPOWS");
 }
 
 float pitchToWrite,rollToWrite,yawToWrite=0;
 int temp1,temp2,temp3;
 void parseSerialData()
 {
-  String msgID=serialContents.substring(0,serialContents.indexOf("|"));
-  String msgData=serialContents.substring(serialContents.indexOf("|")+1);
+    temp1=serialContents.indexOf("|");
+    temp2=serialContents.indexOf("|",temp1+1);
+    
+  msgID=serialContents.substring(0,temp1);
+  msgLen=serialContents.substring(temp1+1,temp2);
+  msgData=serialContents.substring(temp2+1);
+
+  if(msgData.length()+msgID.length()!=msgLen.toInt())
+{
+  sprintf(outputSerial,"");
+  sendOutputMessage("SERIALERR");
+  return;
+}
+  
   if(msgID=="MANPWR")
   {
     XBOXthrottleGoal=msgData.toInt()/10;
@@ -541,30 +581,14 @@ int getAngle(int x1,int y1,int x2, int y2)
 
 void printIRData()
 {
-  Serial.print("POINTSDT|");
-  Serial.print(IrTLeft);
-  Serial.print("|");
-  Serial.print(IrTRight);
-  Serial.print("|");
-  Serial.print(IrTMiddle);
-  Serial.print("|");
-  Serial.print(IrTBack);
-  Serial.print("O_o");
+  sprintf(outputSerial,"%d|%d|%d|%d",IrTLeft,IrTRight,IrTMiddle,IrTBack);
+  sendOutputMessage("POINTSDT");
 }
 
 void printIRPoints()
 {      
-    Serial.print("POINTS|");
-    for(int i=0; i<4; i++)
-    {      
-      Serial.print( int(IRx[i]) );
-      Serial.print("|");
-      Serial.print( int(IRy[i]) );
-      if (i<3)
-        Serial.print("|");
-    }
-     Serial.print("O_o");
-    
+    sprintf(outputSerial,"%d|%d|%d|%d|%d|%d|%d|%d",IRx[0],IRy[0],IRx[1],IRy[1],IRx[2],IRy[2],IRx[3],IRy[3]);
+    sendOutputMessage("POINTS");  
 }
 
 void Write_2IRbytes(byte d1, byte d2)
