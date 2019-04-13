@@ -2,6 +2,8 @@
 
 #include "pinDefinitions.cpp"
 #include "PIDconstants.cpp"
+float currentKP=XBOX_KP;
+float currentKD=XBOX_KD;
 
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
@@ -36,7 +38,7 @@ bool IRDataFine=true;
 int IrTLeft,IrTRight,IrTBack,IrTMiddle;
 
 //FPS
-int FPSgoal=100;
+int FPSgoal=50;
 long startMicro=0; //When the loop started
 long timeTaken=0;  //Time taken to complete a loop
 int cycleCounter=0; //At 1.000.000, reset
@@ -50,6 +52,9 @@ float temperature,humidity,baromPressure;
 
 //IMU
 Adafruit_BNO055 bno = Adafruit_BNO055();
+imu::Vector<3> euler;
+imu::Vector<3> gyroSpeeds = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+
 uint8_t sysCal, gyroCal, accelCal, magCal = 0;
 float imuX,imuY,imuZ;  //X is yaw. Y is roll and Z is pitch
 float lastImuX,lastImuY,lastImuZ;
@@ -74,7 +79,7 @@ float TOFAltitude;
 
 void setup() {
 Serial.begin(115200);
- Serial2.begin(38400,SERIAL_8N1,25,26);
+ Serial2.begin(115200,SERIAL_8N1,25,26);
 
 serialContents.reserve(150);
 msgID.reserve(25);
@@ -146,28 +151,33 @@ void loop() {
   
   if(cycleCounter%(FPSgoal/3)==0)
   {
-      printIRPoints();
-    printIRData();
+     // printIRPoints();
+    //printIRData();
   }
 
-  if(cycleCounter%(FPSgoal/2)==5)
+  if(cycleCounter%(FPSgoal/1)==30)
   {
     SendVolts();
   }
 
-  if(cycleCounter%(FPSgoal/5)==1)
+  if(cycleCounter%(FPSgoal/3)==5)
   {
     SendCurrentMotorPower();
   }
 
-  if(cycleCounter%(FPSgoal/5)==8)
+  if(cycleCounter%(FPSgoal/2)==16)
   {
     sendIMUData();
   }
 
-   if(cycleCounter%(FPSgoal/2)==3)
+   if(cycleCounter%(FPSgoal/1)==25)
   {
     sendCurrentData();
+  }
+
+  if(cycleCounter%(FPSgoal/1)==46)
+  {
+    sendCalibration();
   }
 
 
@@ -214,8 +224,8 @@ void doPIDWork()
     imuErrorY=imuY-XBOXrollGoal;
     imuErrorZ=imuZ-XBOXpitchGoal;
     
-    imuCalcPitch=constrain(XBOX_KP*imuErrorZ-XBOX_KD*imuZspeed+XBOX_KI*0,-XBOX_PITCH_MAX_CHANGE,XBOX_PITCH_MAX_CHANGE);
-    imuCalcRoll=constrain(XBOX_KP*imuErrorY-XBOX_KD*imuYspeed+XBOX_KI*0,-XBOX_ROLL_MAX_CHANGE,XBOX_ROLL_MAX_CHANGE);
+    imuCalcPitch=constrain((currentKP*imuErrorZ)-(currentKD*imuXspeed)+(XBOX_KI*0),-XBOX_PITCH_MAX_CHANGE,XBOX_PITCH_MAX_CHANGE);  //Checked
+   imuCalcRoll=constrain((currentKP*imuErrorY)-(currentKD*imuYspeed)+(XBOX_KI*0),-XBOX_ROLL_MAX_CHANGE,XBOX_ROLL_MAX_CHANGE);
   //  imuCalcYaw=constrain(XBOX_KP_YAW*imuErrorX+XBOX_KD_YAW*imuXspeed+XBOX_KD_YAW*0,-XBOX_YAW_MAX_CHANGE,XBOX_YAW_MAX_CHANGE);
 
     imuCalcM1=XBOXthrottleGoal-imuCalcPitch-imuCalcRoll+imuCalcYaw;
@@ -344,6 +354,12 @@ void parseSerialData()
     if(pitchToWrite>-MAX_PITCHROLL_GOAL && pitchToWrite<MAX_PITCHROLL_GOAL) XBOXpitchGoal=pitchToWrite;
     if(rollToWrite>-MAX_PITCHROLL_GOAL && rollToWrite<MAX_PITCHROLL_GOAL) XBOXrollGoal=rollToWrite;
     XBOXyawGoal=yawToWrite;
+  }else if(msgID=="KP")
+  {
+     currentKP=msgData.toInt()/100.0;
+  }else if(msgID=="KD")
+  {
+    currentKD=msgData.toInt()/100.0;
   }
 }
 
@@ -355,19 +371,23 @@ void readTOFValues()
 
 void readIMUValues()
 {  
-  sensors_event_t event;
-  bno.getEvent(&event);
-
+   euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+   gyroSpeeds = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
   
   lastImuX=imuX;
   lastImuY=imuY;
   lastImuZ=imuZ;
-  imuX=(float)event.orientation.x-imuCalX;
-  imuY=(float)event.orientation.y-imuCalY;
-  imuZ=(float)event.orientation.z-imuCalZ;
-  imuXspeed=imuX-lastImuX;
-  imuYspeed=imuY-lastImuY;
-  imuZspeed=imuZ-lastImuZ;
+  imuX=(float)euler.x()-imuCalX;
+  imuY=(float)euler.y()-imuCalY;
+  imuZ=(float)euler.z()-imuCalZ;
+  imuXspeed=gyroSpeeds.x();
+  imuYspeed=gyroSpeeds.y();
+  imuZspeed=gyroSpeeds.z();
+  /*Serial.println();
+  Serial.println(imuXspeed);
+  Serial.println(imuYspeed);
+  Serial.println(imuZspeed);
+  delay(250);*/
   
   bno.getCalibration(&sysCal, &gyroCal, &accelCal, &magCal);
 
@@ -583,6 +603,12 @@ void printIRData()
 {
   sprintf(outputSerial,"%d|%d|%d|%d",IrTLeft,IrTRight,IrTMiddle,IrTBack);
   sendOutputMessage("POINTSDT");
+}
+
+void sendCalibration()
+{
+  sprintf(outputSerial,"%d|%d|%d", gyroCal, accelCal, magCal);
+  sendOutputMessage("CAL");
 }
 
 void printIRPoints()

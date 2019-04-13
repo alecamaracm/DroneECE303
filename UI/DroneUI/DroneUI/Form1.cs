@@ -16,7 +16,7 @@ namespace DroneUI
 {
     public partial class Form1 : Form
     {
-        public const int SERIAL_SPEED = 38400;
+        public const int SERIAL_SPEED = 115200;
 
         public bool logEverything=false;
 
@@ -39,6 +39,8 @@ namespace DroneUI
         float currentPitch = 0f;
         float currentRoll = 0f;
         float currentYaw = 0f;
+
+        int calGyro, calAccel, calMagnet = 0;
 
         public bool gamepadConnected = false;
 
@@ -66,6 +68,14 @@ namespace DroneUI
             communicator.addHandler("IMUDATA", handleIMUData);
             communicator.addHandler("SERIALERR", handleSerialError);
             communicator.addHandler("AMPS", ampsHandler);
+            communicator.addHandler("CAL", calHandler);
+        }
+
+        private void calHandler(string arg1, string[] arg2)
+        {
+            calGyro = int.Parse(arg2[0]);
+            calAccel = int.Parse(arg2[1]);
+            calMagnet = int.Parse(arg2[2]);
         }
 
         private void ampsHandler(string arg1, string[] arg2)
@@ -251,6 +261,10 @@ namespace DroneUI
 
             labelErrorsDrone.Text = communicator.errorsSerialDroneSec + " err/min";
             labelErrorsPC.Text = communicator.errorsSerialPCSec + " err/min";
+
+            labelCalAccel.Text = calAccel + "";
+            labelCalGyro.Text = calGyro + "";
+            labelCalMagnet.Text = calMagnet  + "";
         }
 
         private void trackBar1_Scroll(object sender, EventArgs e)
@@ -355,10 +369,13 @@ namespace DroneUI
             Log("Gamepad status: " + (gamepadConnected ? "Connected" : "Disconnected"));
         }
 
+        ulong cycle = 0;
         private void inputSendTimer_Tick(object sender, EventArgs e)
         {
-            communicator.sendMessage("MANPWR", (int)(motorPower*10) + "");
-            communicator.sendMessage("CDATA",(int)(pitchGoal*-100)+"|"+(int)(rollGoal*-100)+"|"+(int)(yawGoal*100));
+        
+            if(cycle%(50/4)==0)communicator.sendMessage("MANPWR", (int)(motorPower*10) + "");
+            if (cycle % (50 / 4) == 7)  communicator.sendMessage("CDATA",(int)(pitchGoal*-100)+"|"+(int)(rollGoal*-100)+"|"+(int)(yawGoal*100));
+            cycle++;
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -380,6 +397,16 @@ namespace DroneUI
             motorControl3.setEnable(false);
             motorControl2.setEnable(false);
             motorControl4.setEnable(false);
+        }
+
+        private void numericUpDownkP_ValueChanged(object sender, EventArgs e)
+        {
+            communicator.sendMessage("KP", numericUpDownkP.Value*100 + "");
+        }
+
+        private void numericUpDownkD_ValueChanged(object sender, EventArgs e)
+        {
+            communicator.sendMessage("KD", numericUpDownkD.Value * 100 + "");
         }
 
         private void numericUpDownFPSGoal_ValueChanged(object sender, EventArgs e)
