@@ -46,6 +46,17 @@
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.timerIRDraw = new System.Windows.Forms.Timer(this.components);
             this.panel3 = new System.Windows.Forms.Panel();
+            this.labelCalMagnet = new System.Windows.Forms.Label();
+            this.labelCalAccel = new System.Windows.Forms.Label();
+            this.labelCalGyro = new System.Windows.Forms.Label();
+            this.label22 = new System.Windows.Forms.Label();
+            this.label23 = new System.Windows.Forms.Label();
+            this.label24 = new System.Windows.Forms.Label();
+            this.label25 = new System.Windows.Forms.Label();
+            this.label18 = new System.Windows.Forms.Label();
+            this.numericUpDownkD = new System.Windows.Forms.NumericUpDown();
+            this.label12 = new System.Windows.Forms.Label();
+            this.numericUpDownkP = new System.Windows.Forms.NumericUpDown();
             this.label5VAmps = new System.Windows.Forms.Label();
             this.label16 = new System.Windows.Forms.Label();
             this.labelErrorsDrone = new System.Windows.Forms.Label();
@@ -80,29 +91,22 @@
             this.timerUpdateUI = new System.Windows.Forms.Timer(this.components);
             this.inputSendTimer = new System.Windows.Forms.Timer(this.components);
             this.inputAdquireTimer = new System.Windows.Forms.Timer(this.components);
-            this.numericUpDownkP = new System.Windows.Forms.NumericUpDown();
-            this.label12 = new System.Windows.Forms.Label();
-            this.label18 = new System.Windows.Forms.Label();
-            this.numericUpDownkD = new System.Windows.Forms.NumericUpDown();
+            this.button5 = new System.Windows.Forms.Button();
+            this.label19 = new System.Windows.Forms.Label();
+            this.numericUpDownKI = new System.Windows.Forms.NumericUpDown();
             this.motorControl4 = new DroneUI.MotorControl();
             this.motorControl2 = new DroneUI.MotorControl();
             this.motorControl3 = new DroneUI.MotorControl();
             this.motorControl1 = new DroneUI.MotorControl();
-            this.labelCalMagnet = new System.Windows.Forms.Label();
-            this.labelCalAccel = new System.Windows.Forms.Label();
-            this.labelCalGyro = new System.Windows.Forms.Label();
-            this.label22 = new System.Windows.Forms.Label();
-            this.label23 = new System.Windows.Forms.Label();
-            this.label24 = new System.Windows.Forms.Label();
-            this.label25 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownkD)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownkP)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownFPSGoal)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarThrottle)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownkP)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownkD)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownKI)).BeginInit();
             this.SuspendLayout();
             // 
             // pictureBox1
@@ -281,6 +285,9 @@
             // panel3
             // 
             this.panel3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel3.Controls.Add(this.label19);
+            this.panel3.Controls.Add(this.numericUpDownKI);
+            this.panel3.Controls.Add(this.button5);
             this.panel3.Controls.Add(this.labelCalMagnet);
             this.panel3.Controls.Add(this.labelCalAccel);
             this.panel3.Controls.Add(this.labelCalGyro);
@@ -328,6 +335,136 @@
             this.panel3.Name = "panel3";
             this.panel3.Size = new System.Drawing.Size(812, 225);
             this.panel3.TabIndex = 10;
+            // 
+            // labelCalMagnet
+            // 
+            this.labelCalMagnet.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelCalMagnet.Location = new System.Drawing.Point(421, 197);
+            this.labelCalMagnet.Name = "labelCalMagnet";
+            this.labelCalMagnet.Size = new System.Drawing.Size(44, 23);
+            this.labelCalMagnet.TabIndex = 49;
+            this.labelCalMagnet.Text = "- - -";
+            this.labelCalMagnet.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            // 
+            // labelCalAccel
+            // 
+            this.labelCalAccel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelCalAccel.Location = new System.Drawing.Point(370, 197);
+            this.labelCalAccel.Name = "labelCalAccel";
+            this.labelCalAccel.Size = new System.Drawing.Size(44, 23);
+            this.labelCalAccel.TabIndex = 48;
+            this.labelCalAccel.Text = "- - -";
+            this.labelCalAccel.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            // 
+            // labelCalGyro
+            // 
+            this.labelCalGyro.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelCalGyro.Location = new System.Drawing.Point(321, 197);
+            this.labelCalGyro.Name = "labelCalGyro";
+            this.labelCalGyro.Size = new System.Drawing.Size(44, 23);
+            this.labelCalGyro.TabIndex = 47;
+            this.labelCalGyro.Text = "- - -";
+            this.labelCalGyro.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            // 
+            // label22
+            // 
+            this.label22.AutoSize = true;
+            this.label22.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label22.Location = new System.Drawing.Point(417, 173);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(55, 17);
+            this.label22.TabIndex = 46;
+            this.label22.Text = "Magnet";
+            // 
+            // label23
+            // 
+            this.label23.AutoSize = true;
+            this.label23.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label23.Location = new System.Drawing.Point(371, 173);
+            this.label23.Name = "label23";
+            this.label23.Size = new System.Drawing.Size(40, 17);
+            this.label23.TabIndex = 45;
+            this.label23.Text = "Accel";
+            // 
+            // label24
+            // 
+            this.label24.AutoSize = true;
+            this.label24.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label24.Location = new System.Drawing.Point(323, 173);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(37, 17);
+            this.label24.TabIndex = 44;
+            this.label24.Text = "Gyro";
+            // 
+            // label25
+            // 
+            this.label25.AutoSize = true;
+            this.label25.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label25.Location = new System.Drawing.Point(248, 196);
+            this.label25.Name = "label25";
+            this.label25.Size = new System.Drawing.Size(75, 16);
+            this.label25.TabIndex = 43;
+            this.label25.Text = "Calibration:";
+            // 
+            // label18
+            // 
+            this.label18.AutoSize = true;
+            this.label18.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label18.Location = new System.Drawing.Point(544, 159);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(32, 21);
+            this.label18.TabIndex = 42;
+            this.label18.Text = "kD:";
+            // 
+            // numericUpDownkD
+            // 
+            this.numericUpDownkD.DecimalPlaces = 3;
+            this.numericUpDownkD.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numericUpDownkD.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            196608});
+            this.numericUpDownkD.Location = new System.Drawing.Point(574, 160);
+            this.numericUpDownkD.Minimum = new decimal(new int[] {
+            100,
+            0,
+            0,
+            -2147483648});
+            this.numericUpDownkD.Name = "numericUpDownkD";
+            this.numericUpDownkD.Size = new System.Drawing.Size(58, 20);
+            this.numericUpDownkD.TabIndex = 41;
+            this.numericUpDownkD.ValueChanged += new System.EventHandler(this.numericUpDownkD_ValueChanged);
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label12.Location = new System.Drawing.Point(545, 133);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(30, 21);
+            this.label12.TabIndex = 40;
+            this.label12.Text = "kP:";
+            // 
+            // numericUpDownkP
+            // 
+            this.numericUpDownkP.DecimalPlaces = 2;
+            this.numericUpDownkP.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numericUpDownkP.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.numericUpDownkP.Location = new System.Drawing.Point(575, 134);
+            this.numericUpDownkP.Minimum = new decimal(new int[] {
+            100,
+            0,
+            0,
+            -2147483648});
+            this.numericUpDownkP.Name = "numericUpDownkP";
+            this.numericUpDownkP.Size = new System.Drawing.Size(58, 20);
+            this.numericUpDownkP.TabIndex = 39;
+            this.numericUpDownkP.ValueChanged += new System.EventHandler(this.numericUpDownkP_ValueChanged);
             // 
             // label5VAmps
             // 
@@ -681,65 +818,47 @@
             this.inputAdquireTimer.Interval = 50;
             this.inputAdquireTimer.Tick += new System.EventHandler(this.inputAdquireTimer_Tick);
             // 
-            // numericUpDownkP
+            // button5
             // 
-            this.numericUpDownkP.DecimalPlaces = 2;
-            this.numericUpDownkP.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.numericUpDownkP.Increment = new decimal(new int[] {
+            this.button5.BackColor = System.Drawing.Color.Orchid;
+            this.button5.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button5.Location = new System.Drawing.Point(12, 111);
+            this.button5.Name = "button5";
+            this.button5.Size = new System.Drawing.Size(98, 23);
+            this.button5.TabIndex = 50;
+            this.button5.Text = "Set offsets";
+            this.button5.UseVisualStyleBackColor = false;
+            this.button5.Click += new System.EventHandler(this.button5_Click);
+            // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label19.Location = new System.Drawing.Point(548, 185);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(25, 21);
+            this.label19.TabIndex = 52;
+            this.label19.Text = "kI:";
+            // 
+            // numericUpDownKI
+            // 
+            this.numericUpDownKI.DecimalPlaces = 3;
+            this.numericUpDownKI.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numericUpDownKI.Increment = new decimal(new int[] {
             1,
             0,
             0,
-            131072});
-            this.numericUpDownkP.Location = new System.Drawing.Point(572, 171);
-            this.numericUpDownkP.Minimum = new decimal(new int[] {
+            196608});
+            this.numericUpDownKI.Location = new System.Drawing.Point(574, 186);
+            this.numericUpDownKI.Minimum = new decimal(new int[] {
             100,
             0,
             0,
             -2147483648});
-            this.numericUpDownkP.Name = "numericUpDownkP";
-            this.numericUpDownkP.Size = new System.Drawing.Size(58, 20);
-            this.numericUpDownkP.TabIndex = 39;
-            this.numericUpDownkP.ValueChanged += new System.EventHandler(this.numericUpDownkP_ValueChanged);
-            // 
-            // label12
-            // 
-            this.label12.AutoSize = true;
-            this.label12.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label12.Location = new System.Drawing.Point(542, 170);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(30, 21);
-            this.label12.TabIndex = 40;
-            this.label12.Text = "kP:";
-            // 
-            // label18
-            // 
-            this.label18.AutoSize = true;
-            this.label18.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label18.Location = new System.Drawing.Point(541, 196);
-            this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(32, 21);
-            this.label18.TabIndex = 42;
-            this.label18.Text = "kD:";
-            // 
-            // numericUpDownkD
-            // 
-            this.numericUpDownkD.DecimalPlaces = 2;
-            this.numericUpDownkD.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.numericUpDownkD.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            131072});
-            this.numericUpDownkD.Location = new System.Drawing.Point(571, 197);
-            this.numericUpDownkD.Minimum = new decimal(new int[] {
-            100,
-            0,
-            0,
-            -2147483648});
-            this.numericUpDownkD.Name = "numericUpDownkD";
-            this.numericUpDownkD.Size = new System.Drawing.Size(58, 20);
-            this.numericUpDownkD.TabIndex = 41;
-            this.numericUpDownkD.ValueChanged += new System.EventHandler(this.numericUpDownkD_ValueChanged);
+            this.numericUpDownKI.Name = "numericUpDownKI";
+            this.numericUpDownKI.Size = new System.Drawing.Size(58, 20);
+            this.numericUpDownKI.TabIndex = 51;
+            this.numericUpDownKI.ValueChanged += new System.EventHandler(this.numericUpDownKI_ValueChanged);
             // 
             // motorControl4
             // 
@@ -773,76 +892,6 @@
             this.motorControl1.Size = new System.Drawing.Size(188, 235);
             this.motorControl1.TabIndex = 3;
             // 
-            // labelCalMagnet
-            // 
-            this.labelCalMagnet.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelCalMagnet.Location = new System.Drawing.Point(421, 197);
-            this.labelCalMagnet.Name = "labelCalMagnet";
-            this.labelCalMagnet.Size = new System.Drawing.Size(44, 23);
-            this.labelCalMagnet.TabIndex = 49;
-            this.labelCalMagnet.Text = "- - -";
-            this.labelCalMagnet.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // labelCalAccel
-            // 
-            this.labelCalAccel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelCalAccel.Location = new System.Drawing.Point(370, 197);
-            this.labelCalAccel.Name = "labelCalAccel";
-            this.labelCalAccel.Size = new System.Drawing.Size(44, 23);
-            this.labelCalAccel.TabIndex = 48;
-            this.labelCalAccel.Text = "- - -";
-            this.labelCalAccel.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // labelCalGyro
-            // 
-            this.labelCalGyro.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelCalGyro.Location = new System.Drawing.Point(321, 197);
-            this.labelCalGyro.Name = "labelCalGyro";
-            this.labelCalGyro.Size = new System.Drawing.Size(44, 23);
-            this.labelCalGyro.TabIndex = 47;
-            this.labelCalGyro.Text = "- - -";
-            this.labelCalGyro.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            // 
-            // label22
-            // 
-            this.label22.AutoSize = true;
-            this.label22.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label22.Location = new System.Drawing.Point(417, 173);
-            this.label22.Name = "label22";
-            this.label22.Size = new System.Drawing.Size(55, 17);
-            this.label22.TabIndex = 46;
-            this.label22.Text = "Magnet";
-            // 
-            // label23
-            // 
-            this.label23.AutoSize = true;
-            this.label23.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label23.Location = new System.Drawing.Point(371, 173);
-            this.label23.Name = "label23";
-            this.label23.Size = new System.Drawing.Size(40, 17);
-            this.label23.TabIndex = 45;
-            this.label23.Text = "Accel";
-            // 
-            // label24
-            // 
-            this.label24.AutoSize = true;
-            this.label24.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label24.Location = new System.Drawing.Point(323, 173);
-            this.label24.Name = "label24";
-            this.label24.Size = new System.Drawing.Size(37, 17);
-            this.label24.TabIndex = 44;
-            this.label24.Text = "Gyro";
-            // 
-            // label25
-            // 
-            this.label25.AutoSize = true;
-            this.label25.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label25.Location = new System.Drawing.Point(248, 196);
-            this.label25.Name = "label25";
-            this.label25.Size = new System.Drawing.Size(75, 16);
-            this.label25.TabIndex = 43;
-            this.label25.Text = "Calibration:";
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -866,10 +915,11 @@
             this.panel2.PerformLayout();
             this.panel3.ResumeLayout(false);
             this.panel3.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownkD)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownkP)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownFPSGoal)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarThrottle)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownkP)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownkD)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownKI)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -943,6 +993,9 @@
         private System.Windows.Forms.Label label23;
         private System.Windows.Forms.Label label24;
         private System.Windows.Forms.Label label25;
+        private System.Windows.Forms.Button button5;
+        private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.NumericUpDown numericUpDownKI;
     }
 }
 

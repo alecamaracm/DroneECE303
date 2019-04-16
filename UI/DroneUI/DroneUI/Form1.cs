@@ -399,14 +399,24 @@ namespace DroneUI
             motorControl4.setEnable(false);
         }
 
+        private void button5_Click(object sender, EventArgs e)
+        {
+            communicator.sendMessage("RESETOFFSETS","");
+        }
+
+        private void numericUpDownKI_ValueChanged(object sender, EventArgs e)
+        {
+            communicator.sendMessage("KI", numericUpDownKI.Value * 1000 + "");
+        }
+
         private void numericUpDownkP_ValueChanged(object sender, EventArgs e)
         {
-            communicator.sendMessage("KP", numericUpDownkP.Value*100 + "");
+            communicator.sendMessage("KP", numericUpDownkP.Value*1000 + "");
         }
 
         private void numericUpDownkD_ValueChanged(object sender, EventArgs e)
         {
-            communicator.sendMessage("KD", numericUpDownkD.Value * 100 + "");
+            communicator.sendMessage("KD", numericUpDownkD.Value * 1000 + "");
         }
 
         private void numericUpDownFPSGoal_ValueChanged(object sender, EventArgs e)

@@ -4,6 +4,7 @@
 #include "PIDconstants.cpp"
 float currentKP=XBOX_KP;
 float currentKD=XBOX_KD;
+float currentKI=XBOX_KI;
 
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
@@ -54,6 +55,7 @@ float temperature,humidity,baromPressure;
 Adafruit_BNO055 bno = Adafruit_BNO055();
 imu::Vector<3> euler;
 imu::Vector<3> gyroSpeeds = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+imu::Vector<3> accel;
 
 uint8_t sysCal, gyroCal, accelCal, magCal = 0;
 float imuX,imuY,imuZ;  //X is yaw. Y is roll and Z is pitch
@@ -63,6 +65,9 @@ float imuXspeed,imuYspeed,imuZspeed;
 float imuErrorX,imuErrorY,imuErrorZ;
 float imuCalcPitch,imuCalcRoll,imuCalcYaw;
 float imuCalcM1,imuCalcM2,imuCalcM3,imuCalcM4;
+
+float pitchI=0;
+float rollI=0;
 
 //Controls
 float XBOXthrottleGoal=0;
@@ -180,6 +185,7 @@ void loop() {
     sendCalibration();
   }
 
+  //sendAccelData(); For vibration testing, use Serial chart on the USB serial
 
   doPIDWork();
   
@@ -205,6 +211,15 @@ void loop() {
   
 }
 
+float lastTotal=0;
+void sendAccelData()
+{
+     accel = bno.getVector(Adafruit_BNO055::VECTOR_ACCELEROMETER);
+     float total=pow(accel.x(),2.0)+pow(accel.y(),2.0)+pow(accel.z(),2.0);
+     Serial.println(total-lastTotal);
+     lastTotal=total;
+}
+
 void sendIMUData()
 {
   sprintf(outputSerial,"%d|%d|%d",(int)(imuZ*100),(int)(imuY*100),(int)(imuX*100));
@@ -213,9 +228,13 @@ void sendIMUData()
 
 void imuCalibrate()
 {
-  imuCalX=imuX;
-  imuCalY=imuY;
-  imuCalZ=imuZ;
+  euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+  
+  imuCalX=euler.x();
+  imuCalY=euler.y();
+  imuCalZ=euler.z();
+  pitchI=0;
+  rollI=0;
 }
 
 void doPIDWork()
@@ -223,9 +242,16 @@ void doPIDWork()
     imuErrorX=imuX-XBOXyawGoal;
     imuErrorY=imuY-XBOXrollGoal;
     imuErrorZ=imuZ-XBOXpitchGoal;
+
+    pitchI+=(imuErrorZ*currentKI);
+    rollI+=(imuErrorY*currentKI);
+    pitchI=constrain(pitchI,-10,10);
+    rollI=constrain(rollI,-10,10);
     
-    imuCalcPitch=constrain((currentKP*imuErrorZ)-(currentKD*imuXspeed)+(XBOX_KI*0),-XBOX_PITCH_MAX_CHANGE,XBOX_PITCH_MAX_CHANGE);  //Checked
-   imuCalcRoll=constrain((currentKP*imuErrorY)-(currentKD*imuYspeed)+(XBOX_KI*0),-XBOX_ROLL_MAX_CHANGE,XBOX_ROLL_MAX_CHANGE);
+
+    
+    imuCalcPitch=constrain((currentKP*imuErrorZ)-(currentKD*imuXspeed)+(pitchI),-XBOX_PITCH_MAX_CHANGE,XBOX_PITCH_MAX_CHANGE);  //Checked
+   imuCalcRoll=constrain((currentKP*imuErrorY)-(currentKD*imuYspeed)+(rollI),-XBOX_ROLL_MAX_CHANGE,XBOX_ROLL_MAX_CHANGE);
   //  imuCalcYaw=constrain(XBOX_KP_YAW*imuErrorX+XBOX_KD_YAW*imuXspeed+XBOX_KD_YAW*0,-XBOX_YAW_MAX_CHANGE,XBOX_YAW_MAX_CHANGE);
 
     imuCalcM1=XBOXthrottleGoal-imuCalcPitch-imuCalcRoll+imuCalcYaw;
@@ -356,10 +382,16 @@ void parseSerialData()
     XBOXyawGoal=yawToWrite;
   }else if(msgID=="KP")
   {
-     currentKP=msgData.toInt()/100.0;
+     currentKP=msgData.toInt()/1000.0;
   }else if(msgID=="KD")
   {
-    currentKD=msgData.toInt()/100.0;
+    currentKD=msgData.toInt()/1000.0;
+  }else if(msgID=="KI")
+  {
+    currentKI=msgData.toInt()/1000.0;
+  }else if(msgID=="RESETOFFSETS")
+  {
+    imuCalibrate();
   }
 }
 
@@ -373,7 +405,8 @@ void readIMUValues()
 {  
    euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
    gyroSpeeds = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
-  
+
+ 
   lastImuX=imuX;
   lastImuY=imuY;
   lastImuZ=imuZ;
