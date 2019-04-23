@@ -46,6 +46,9 @@
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.timerIRDraw = new System.Windows.Forms.Timer(this.components);
             this.panel3 = new System.Windows.Forms.Panel();
+            this.label19 = new System.Windows.Forms.Label();
+            this.numericUpDownKI = new System.Windows.Forms.NumericUpDown();
+            this.button5 = new System.Windows.Forms.Button();
             this.labelCalMagnet = new System.Windows.Forms.Label();
             this.labelCalAccel = new System.Windows.Forms.Label();
             this.labelCalGyro = new System.Windows.Forms.Label();
@@ -91,22 +94,20 @@
             this.timerUpdateUI = new System.Windows.Forms.Timer(this.components);
             this.inputSendTimer = new System.Windows.Forms.Timer(this.components);
             this.inputAdquireTimer = new System.Windows.Forms.Timer(this.components);
-            this.button5 = new System.Windows.Forms.Button();
-            this.label19 = new System.Windows.Forms.Label();
-            this.numericUpDownKI = new System.Windows.Forms.NumericUpDown();
             this.motorControl4 = new DroneUI.MotorControl();
             this.motorControl2 = new DroneUI.MotorControl();
             this.motorControl3 = new DroneUI.MotorControl();
             this.motorControl1 = new DroneUI.MotorControl();
+            this.button6 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownKI)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownkD)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownkP)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownFPSGoal)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarThrottle)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownKI)).BeginInit();
             this.SuspendLayout();
             // 
             // pictureBox1
@@ -285,6 +286,7 @@
             // panel3
             // 
             this.panel3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel3.Controls.Add(this.button6);
             this.panel3.Controls.Add(this.label19);
             this.panel3.Controls.Add(this.numericUpDownKI);
             this.panel3.Controls.Add(this.button5);
@@ -335,6 +337,53 @@
             this.panel3.Name = "panel3";
             this.panel3.Size = new System.Drawing.Size(812, 225);
             this.panel3.TabIndex = 10;
+            // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label19.Location = new System.Drawing.Point(548, 185);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(25, 21);
+            this.label19.TabIndex = 52;
+            this.label19.Text = "kI:";
+            // 
+            // numericUpDownKI
+            // 
+            this.numericUpDownKI.DecimalPlaces = 3;
+            this.numericUpDownKI.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numericUpDownKI.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            196608});
+            this.numericUpDownKI.Location = new System.Drawing.Point(574, 186);
+            this.numericUpDownKI.Minimum = new decimal(new int[] {
+            100,
+            0,
+            0,
+            -2147483648});
+            this.numericUpDownKI.Name = "numericUpDownKI";
+            this.numericUpDownKI.Size = new System.Drawing.Size(58, 20);
+            this.numericUpDownKI.TabIndex = 51;
+            this.numericUpDownKI.Value = new decimal(new int[] {
+            5,
+            0,
+            0,
+            196608});
+            this.numericUpDownKI.ValueChanged += new System.EventHandler(this.numericUpDownKI_ValueChanged);
+            // 
+            // button5
+            // 
+            this.button5.BackColor = System.Drawing.Color.Orchid;
+            this.button5.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button5.Location = new System.Drawing.Point(12, 111);
+            this.button5.Name = "button5";
+            this.button5.Size = new System.Drawing.Size(98, 23);
+            this.button5.TabIndex = 50;
+            this.button5.Text = "Set offsets";
+            this.button5.UseVisualStyleBackColor = false;
+            this.button5.Click += new System.EventHandler(this.button5_Click);
             // 
             // labelCalMagnet
             // 
@@ -434,6 +483,11 @@
             this.numericUpDownkD.Name = "numericUpDownkD";
             this.numericUpDownkD.Size = new System.Drawing.Size(58, 20);
             this.numericUpDownkD.TabIndex = 41;
+            this.numericUpDownkD.Value = new decimal(new int[] {
+            5,
+            0,
+            0,
+            131072});
             this.numericUpDownkD.ValueChanged += new System.EventHandler(this.numericUpDownkD_ValueChanged);
             // 
             // label12
@@ -464,6 +518,11 @@
             this.numericUpDownkP.Name = "numericUpDownkP";
             this.numericUpDownkP.Size = new System.Drawing.Size(58, 20);
             this.numericUpDownkP.TabIndex = 39;
+            this.numericUpDownkP.Value = new decimal(new int[] {
+            2,
+            0,
+            0,
+            65536});
             this.numericUpDownkP.ValueChanged += new System.EventHandler(this.numericUpDownkP_ValueChanged);
             // 
             // label5VAmps
@@ -818,48 +877,6 @@
             this.inputAdquireTimer.Interval = 50;
             this.inputAdquireTimer.Tick += new System.EventHandler(this.inputAdquireTimer_Tick);
             // 
-            // button5
-            // 
-            this.button5.BackColor = System.Drawing.Color.Orchid;
-            this.button5.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button5.Location = new System.Drawing.Point(12, 111);
-            this.button5.Name = "button5";
-            this.button5.Size = new System.Drawing.Size(98, 23);
-            this.button5.TabIndex = 50;
-            this.button5.Text = "Set offsets";
-            this.button5.UseVisualStyleBackColor = false;
-            this.button5.Click += new System.EventHandler(this.button5_Click);
-            // 
-            // label19
-            // 
-            this.label19.AutoSize = true;
-            this.label19.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label19.Location = new System.Drawing.Point(548, 185);
-            this.label19.Name = "label19";
-            this.label19.Size = new System.Drawing.Size(25, 21);
-            this.label19.TabIndex = 52;
-            this.label19.Text = "kI:";
-            // 
-            // numericUpDownKI
-            // 
-            this.numericUpDownKI.DecimalPlaces = 3;
-            this.numericUpDownKI.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.numericUpDownKI.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            196608});
-            this.numericUpDownKI.Location = new System.Drawing.Point(574, 186);
-            this.numericUpDownKI.Minimum = new decimal(new int[] {
-            100,
-            0,
-            0,
-            -2147483648});
-            this.numericUpDownKI.Name = "numericUpDownKI";
-            this.numericUpDownKI.Size = new System.Drawing.Size(58, 20);
-            this.numericUpDownKI.TabIndex = 51;
-            this.numericUpDownKI.ValueChanged += new System.EventHandler(this.numericUpDownKI_ValueChanged);
-            // 
             // motorControl4
             // 
             this.motorControl4.Location = new System.Drawing.Point(1024, 378);
@@ -892,6 +909,18 @@
             this.motorControl1.Size = new System.Drawing.Size(188, 235);
             this.motorControl1.TabIndex = 3;
             // 
+            // button6
+            // 
+            this.button6.BackColor = System.Drawing.Color.MediumPurple;
+            this.button6.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button6.Location = new System.Drawing.Point(117, 111);
+            this.button6.Name = "button6";
+            this.button6.Size = new System.Drawing.Size(98, 23);
+            this.button6.TabIndex = 53;
+            this.button6.Text = "Reset I";
+            this.button6.UseVisualStyleBackColor = false;
+            this.button6.Click += new System.EventHandler(this.button6_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -915,11 +944,11 @@
             this.panel2.PerformLayout();
             this.panel3.ResumeLayout(false);
             this.panel3.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownKI)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownkD)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownkP)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownFPSGoal)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarThrottle)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownKI)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -996,6 +1025,7 @@
         private System.Windows.Forms.Button button5;
         private System.Windows.Forms.Label label19;
         private System.Windows.Forms.NumericUpDown numericUpDownKI;
+        private System.Windows.Forms.Button button6;
     }
 }
 

@@ -230,16 +230,21 @@ void imuCalibrate()
 {
   euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
   
-  imuCalX=euler.x();
+  //imuCalX=euler.x();
+  imuCalX=0;
   imuCalY=euler.y();
   imuCalZ=euler.z();
-  pitchI=0;
-  rollI=0;
+  
 }
 
 void doPIDWork()
 {
     imuErrorX=imuX-XBOXyawGoal;
+    if(imuErrorX>180){ imuErrorX-=360;}
+    if(imuErrorX<-180){ imuErrorX+=360;}
+
+    
+    
     imuErrorY=imuY-XBOXrollGoal;
     imuErrorZ=imuZ-XBOXpitchGoal;
 
@@ -252,12 +257,12 @@ void doPIDWork()
     
     imuCalcPitch=constrain((currentKP*imuErrorZ)-(currentKD*imuXspeed)+(pitchI),-XBOX_PITCH_MAX_CHANGE,XBOX_PITCH_MAX_CHANGE);  //Checked
    imuCalcRoll=constrain((currentKP*imuErrorY)-(currentKD*imuYspeed)+(rollI),-XBOX_ROLL_MAX_CHANGE,XBOX_ROLL_MAX_CHANGE);
-  //  imuCalcYaw=constrain(XBOX_KP_YAW*imuErrorX+XBOX_KD_YAW*imuXspeed+XBOX_KD_YAW*0,-XBOX_YAW_MAX_CHANGE,XBOX_YAW_MAX_CHANGE);
+    imuCalcYaw=constrain(XBOX_KP_YAW*imuErrorX+XBOX_KD_YAW*0+XBOX_KI_YAW*0,-XBOX_YAW_MAX_CHANGE,XBOX_YAW_MAX_CHANGE);
 
-    imuCalcM1=XBOXthrottleGoal-imuCalcPitch-imuCalcRoll+imuCalcYaw;
-    imuCalcM2=XBOXthrottleGoal+imuCalcPitch-imuCalcRoll-imuCalcYaw;
-    imuCalcM3=XBOXthrottleGoal-imuCalcPitch+imuCalcRoll-imuCalcYaw;
-    imuCalcM4=XBOXthrottleGoal+imuCalcPitch+imuCalcRoll+imuCalcYaw;
+    imuCalcM1=XBOXthrottleGoal-imuCalcPitch-imuCalcRoll-imuCalcYaw;
+    imuCalcM2=XBOXthrottleGoal+imuCalcPitch-imuCalcRoll+imuCalcYaw;
+    imuCalcM3=XBOXthrottleGoal-imuCalcPitch+imuCalcRoll+imuCalcYaw;
+    imuCalcM4=XBOXthrottleGoal+imuCalcPitch+imuCalcRoll-imuCalcYaw;
 
     constrain(imuCalcM1,0,100);
     constrain(imuCalcM2,0,100);
@@ -392,6 +397,10 @@ void parseSerialData()
   }else if(msgID=="RESETOFFSETS")
   {
     imuCalibrate();
+  }else if(msgID=="SETI")
+  {
+    pitchI=0;
+    rollI=0;
   }
 }
 

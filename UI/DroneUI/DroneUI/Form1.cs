@@ -344,6 +344,9 @@ namespace DroneUI
                     yawGoal += Map(gamepad.RightThumbX, -32790, -5000, -2.1f, 0);
                 }
             }
+
+            yawGoal = yawGoal % 360;
+            if (yawGoal < 0) yawGoal += 360;
                 
 
 
@@ -402,11 +405,17 @@ namespace DroneUI
         private void button5_Click(object sender, EventArgs e)
         {
             communicator.sendMessage("RESETOFFSETS","");
+            yawGoal = currentYaw;
         }
 
         private void numericUpDownKI_ValueChanged(object sender, EventArgs e)
         {
             communicator.sendMessage("KI", numericUpDownKI.Value * 1000 + "");
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            communicator.sendMessage("SETI", "");
         }
 
         private void numericUpDownkP_ValueChanged(object sender, EventArgs e)
