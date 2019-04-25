@@ -256,8 +256,8 @@ void doPIDWork()
 
     
     imuCalcPitch=constrain((currentKP*imuErrorZ)-(currentKD*imuXspeed)+(pitchI),-XBOX_PITCH_MAX_CHANGE,XBOX_PITCH_MAX_CHANGE);  //Checked
-   imuCalcRoll=constrain((currentKP*imuErrorY)-(currentKD*imuYspeed)+(rollI),-XBOX_ROLL_MAX_CHANGE,XBOX_ROLL_MAX_CHANGE);
-    imuCalcYaw=constrain(XBOX_KP_YAW*imuErrorX+XBOX_KD_YAW*0+XBOX_KI_YAW*0,-XBOX_YAW_MAX_CHANGE,XBOX_YAW_MAX_CHANGE);
+  // imuCalcRoll=constrain((currentKP*imuErrorY)-(currentKD*imuYspeed)+(rollI),-XBOX_ROLL_MAX_CHANGE,XBOX_ROLL_MAX_CHANGE);
+ //   imuCalcYaw=constrain(XBOX_KP_YAW*imuErrorX+XBOX_KD_YAW*0+XBOX_KI_YAW*0,-XBOX_YAW_MAX_CHANGE,XBOX_YAW_MAX_CHANGE);
 
     imuCalcM1=XBOXthrottleGoal-imuCalcPitch-imuCalcRoll-imuCalcYaw;
     imuCalcM2=XBOXthrottleGoal+imuCalcPitch-imuCalcRoll+imuCalcYaw;
