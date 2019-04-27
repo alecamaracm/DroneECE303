@@ -12,9 +12,28 @@ float currentKI=XBOX_KI;
 #include <Adafruit_BME280.h>
 
 #include <VL53L0X.h>
+#include <SimpleKalmanFilter.h>
+
+#define KALMAN_K1 5
+#define KALMAN_K2 10
+#define KALMAN_K3 0.75
+
+#define KALMAN_2K1 5
+#define KALMAN_2K2 5
+#define KALMAN_2K3 0.75
 
 #define SEALEVELPRESSURE_HPA (1013.25)
 #define MAX_PITCHROLL_GOAL 25
+
+
+
+//Filtering
+SimpleKalmanFilter kalmanGyroX = SimpleKalmanFilter(KALMAN_2K1, KALMAN_2K2, KALMAN_2K3);
+SimpleKalmanFilter kalmanGyroY = SimpleKalmanFilter(KALMAN_2K1, KALMAN_2K2, KALMAN_2K3);
+
+SimpleKalmanFilter kalmanAccelX = SimpleKalmanFilter(KALMAN_K1, KALMAN_K2, KALMAN_K3);
+SimpleKalmanFilter kalmanAccelY = SimpleKalmanFilter(KALMAN_K1, KALMAN_K2, KALMAN_K3);
+SimpleKalmanFilter kalmanAccelZ = SimpleKalmanFilter(KALMAN_K1, KALMAN_K2, KALMAN_K3);
 
 
 //Serial
@@ -39,7 +58,7 @@ bool IRDataFine=true;
 int IrTLeft,IrTRight,IrTBack,IrTMiddle;
 
 //FPS
-int FPSgoal=50;
+int FPSgoal=100;
 long startMicro=0; //When the loop started
 long timeTaken=0;  //Time taken to complete a loop
 int cycleCounter=0; //At 1.000.000, reset
@@ -53,19 +72,25 @@ float temperature,humidity,baromPressure;
 
 //IMU
 Adafruit_BNO055 bno = Adafruit_BNO055();
-imu::Vector<3> euler;
-imu::Vector<3> gyroSpeeds = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+imu::Vector<3> gyro;
 imu::Vector<3> accel;
 
-uint8_t sysCal, gyroCal, accelCal, magCal = 0;
-float imuX,imuY,imuZ;  //X is yaw. Y is roll and Z is pitch
-float lastImuX,lastImuY,lastImuZ;
-float imuCalX,imuCalY,imuCalZ;
-float imuXspeed,imuYspeed,imuZspeed;
-float imuErrorX,imuErrorY,imuErrorZ;
+float accX,accY,accZ;
+float gyroX,gyroY;
+float gyroDT;
+long lastGyroMicros=0;
+
+float totalPitch,totalRoll,totalYaw;
+float accelPitch,accelRoll;
+float accelPitchCal,accelRollCal;
+
+float imuErrorYaw,imuErrorRoll,imuErrorPitch;
 float imuCalcPitch,imuCalcRoll,imuCalcYaw;
 float imuCalcM1,imuCalcM2,imuCalcM3,imuCalcM4;
 
+uint8_t sysCal, gyroCal, accelCal, magCal = 0;
+
+//PID
 float pitchI=0;
 float rollI=0;
 
@@ -132,8 +157,7 @@ void initializeSensors()
   bno.setExtCrystalUse(true);
   delay(1000);
   
-  readIMUValues();
-  imuCalibrate();
+  calibrateIMU();
 }
 
 
@@ -141,7 +165,8 @@ void loop() {
 
   startMicro=micros();
 
-  readIMUValues();
+  getIMUData();
+  
   if(cycleCounter%(FPSgoal/2)==10)readBME280Values();
 
   if(Serial2.available()>0)
@@ -160,34 +185,38 @@ void loop() {
     //printIRData();
   }
 
-  if(cycleCounter%(FPSgoal/1)==30)
+  if(cycleCounter%(FPSgoal/1)==60)
   {
     SendVolts();
   }
 
-  if(cycleCounter%(FPSgoal/3)==5)
+  if(cycleCounter%(FPSgoal/3)==20)
   {
     SendCurrentMotorPower();
   }
 
-  if(cycleCounter%(FPSgoal/2)==16)
+  if(cycleCounter%(FPSgoal/2)==1)
   {
     sendIMUData();
   }
 
-   if(cycleCounter%(FPSgoal/1)==25)
+   if(cycleCounter%(FPSgoal/1)==50)
   {
     sendCurrentData();
   }
 
-  if(cycleCounter%(FPSgoal/1)==46)
+  if(cycleCounter%(FPSgoal/1)==92)
   {
     sendCalibration();
   }
 
   //sendAccelData(); For vibration testing, use Serial chart on the USB serial
 
-  doPIDWork();
+  if(cycleCounter%(FPSgoal/50)==0)
+  {
+    doPIDWork();
+  }
+
   
   
 
@@ -216,53 +245,59 @@ void sendAccelData()
 {
      accel = bno.getVector(Adafruit_BNO055::VECTOR_ACCELEROMETER);
      float total=pow(accel.x(),2.0)+pow(accel.y(),2.0)+pow(accel.z(),2.0);
-     Serial.println(total-lastTotal);
+    // Serial.println(total-lastTotal);
      lastTotal=total;
 }
 
 void sendIMUData()
 {
-  sprintf(outputSerial,"%d|%d|%d",(int)(imuZ*100),(int)(imuY*100),(int)(imuX*100));
+  sprintf(outputSerial,"%d|%d|%d",(int)(totalPitch*100),(int)(totalRoll*100),(int)(totalYaw*100));
+ Serial.println(totalPitch);
+  
   sendOutputMessage("IMUDATA");
 }
 
-void imuCalibrate()
+void calibrateIMU()
 {
-  euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
-  
-  //imuCalX=euler.x();
-  imuCalX=0;
-  imuCalY=euler.y();
-  imuCalZ=euler.z();
-  
+  accelPitchCal=0;
+  accelRollCal=0;
+   long startMills=millis();
+   while(millis()-startMills<1000)
+   {
+    getIMUData();
+   }
+  accelPitchCal=accelPitch;
+  accelRollCal=accelRoll;
+   totalPitch=0;
+   totalRoll=0;
 }
 
 void doPIDWork()
 {
-    imuErrorX=imuX-XBOXyawGoal;
-    if(imuErrorX>180){ imuErrorX-=360;}
-    if(imuErrorX<-180){ imuErrorX+=360;}
+    imuErrorYaw=totalYaw-XBOXyawGoal;
+    if(imuErrorYaw>180){ imuErrorYaw-=360;}
+    if(imuErrorYaw<-180){ imuErrorYaw+=360;}
 
     
     
-    imuErrorY=imuY-XBOXrollGoal;
-    imuErrorZ=imuZ-XBOXpitchGoal;
+    imuErrorRoll=totalRoll-XBOXrollGoal;
+    imuErrorPitch=totalPitch-XBOXpitchGoal;
 
-    pitchI+=(imuErrorZ*currentKI);
-    rollI+=(imuErrorY*currentKI);
+    pitchI+=(imuErrorPitch*currentKI);
+    rollI+=(imuErrorRoll*currentKI);
     pitchI=constrain(pitchI,-10,10);
     rollI=constrain(rollI,-10,10);
     
 
     
-    imuCalcPitch=constrain((currentKP*imuErrorZ)-(currentKD*imuXspeed)+(pitchI),-XBOX_PITCH_MAX_CHANGE,XBOX_PITCH_MAX_CHANGE);  //Checked
-  // imuCalcRoll=constrain((currentKP*imuErrorY)-(currentKD*imuYspeed)+(rollI),-XBOX_ROLL_MAX_CHANGE,XBOX_ROLL_MAX_CHANGE);
- //   imuCalcYaw=constrain(XBOX_KP_YAW*imuErrorX+XBOX_KD_YAW*0+XBOX_KI_YAW*0,-XBOX_YAW_MAX_CHANGE,XBOX_YAW_MAX_CHANGE);
+    imuCalcPitch=constrain((currentKP*imuErrorPitch)-(currentKD*gyroX)+(pitchI),-XBOX_PITCH_MAX_CHANGE,XBOX_PITCH_MAX_CHANGE);  //Checked
+  // imuCalcRoll=constrain((currentKP*imuErrorRoll)-(currentKD*gyroY)+(rollI),-XBOX_ROLL_MAX_CHANGE,XBOX_ROLL_MAX_CHANGE);
+ //   imuCalcYaw=constrain(XBOX_KP_YAW*imuErrorYaw+XBOX_KD_YAW*0+XBOX_KI_YAW*0,-XBOX_YAW_MAX_CHANGE,XBOX_YAW_MAX_CHANGE);
 
-    imuCalcM1=XBOXthrottleGoal-imuCalcPitch-imuCalcRoll-imuCalcYaw;
-    imuCalcM2=XBOXthrottleGoal+imuCalcPitch-imuCalcRoll+imuCalcYaw;
-    imuCalcM3=XBOXthrottleGoal-imuCalcPitch+imuCalcRoll+imuCalcYaw;
-    imuCalcM4=XBOXthrottleGoal+imuCalcPitch+imuCalcRoll-imuCalcYaw;
+    imuCalcM1=XBOXthrottleGoal+imuCalcPitch-imuCalcRoll-imuCalcYaw;
+    imuCalcM2=XBOXthrottleGoal-imuCalcPitch-imuCalcRoll+imuCalcYaw;
+    imuCalcM3=XBOXthrottleGoal+imuCalcPitch+imuCalcRoll+imuCalcYaw;
+    imuCalcM4=XBOXthrottleGoal-imuCalcPitch+imuCalcRoll-imuCalcYaw;
 
     constrain(imuCalcM1,0,100);
     constrain(imuCalcM2,0,100);
@@ -396,7 +431,7 @@ void parseSerialData()
     currentKI=msgData.toInt()/1000.0;
   }else if(msgID=="RESETOFFSETS")
   {
-    imuCalibrate();
+    calibrateIMU();
   }else if(msgID=="SETI")
   {
     pitchI=0;
@@ -410,26 +445,40 @@ void readTOFValues()
   TOFAltitude=sensor.readRangeSingleMillimeters();
 }
 
-void readIMUValues()
+void getIMUData()
 {  
-   euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
-   gyroSpeeds = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
+  accel = bno.getVector(Adafruit_BNO055::VECTOR_ACCELEROMETER);
+  accX=kalmanAccelX.updateEstimate(accel.x());
+  accY=kalmanAccelY.updateEstimate(accel.y());
+  accZ=kalmanAccelZ.updateEstimate(accel.z());
 
- 
-  lastImuX=imuX;
-  lastImuY=imuY;
-  lastImuZ=imuZ;
-  imuX=(float)euler.x()-imuCalX;
-  imuY=(float)euler.y()-imuCalY;
-  imuZ=(float)euler.z()-imuCalZ;
-  imuXspeed=gyroSpeeds.x();
-  imuYspeed=gyroSpeeds.y();
-  imuZspeed=gyroSpeeds.z();
-  /*Serial.println();
-  Serial.println(imuXspeed);
-  Serial.println(imuYspeed);
-  Serial.println(imuZspeed);
-  delay(250);*/
+   /*accX=accel.x();
+  accY=accel.y();
+  accZ=accel.z();*/
+
+  
+  gyroDT=(micros()-lastGyroMicros)/1000000.0f;
+  
+  gyro = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);  
+    lastGyroMicros=micros();
+ // Serial.print(gyro.x());
+//  Serial.print(" ");
+gyroX=gyro.x();
+gyroY=gyro.y();
+  //gyroX=kalmanGyroX.updateEstimate(gyro.x());
+//  Serial.println(gyroX);
+  //gyroY=kalmanGyroY.updateEstimate(gyro.y());
+
+
+  totalRoll+=gyroY*gyroDT;
+  totalPitch+=gyroX*gyroDT;  
+
+  accelPitch=(atan(accY/sqrt(pow(accX,2) + pow(accZ,2)))*57.29f) -accelPitchCal;
+  accelRoll=(atan(-1*(accX)/sqrt(pow((accY),2) + pow((accZ),2)))*57.29f) - accelRollCal;
+
+  totalRoll=totalRoll*0.97f+accelRoll*0.03f;
+  totalPitch=totalPitch*0.97f+accelPitch*0.03f;
+  
   
   bno.getCalibration(&sysCal, &gyroCal, &accelCal, &magCal);
 
