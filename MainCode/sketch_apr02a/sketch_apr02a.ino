@@ -252,7 +252,7 @@ void sendAccelData()
 void sendIMUData()
 {
   sprintf(outputSerial,"%d|%d|%d",(int)(totalPitch*100),(int)(totalRoll*100),(int)(totalYaw*100));
- Serial.println(totalPitch);
+ //Serial.println(totalPitch);
   
   sendOutputMessage("IMUDATA");
 }
@@ -308,12 +308,28 @@ void doPIDWork()
     setMotorPower(1,imuCalcM2,false);
     setMotorPower(2,imuCalcM3,false);
     setMotorPower(3,imuCalcM4,true);
+
+
+    if(cycleCounter%4==0)
+    {
+       Serial.print((int)(imuErrorPitch*100));
+    Serial.print(":");
+    Serial.print((int)((currentKP*imuErrorPitch)*100));
+    Serial.print(":");
+    Serial.print((int)((currentKD*gyroX)*100));
+    Serial.print(":");
+    Serial.print((int)(pitchI*100));
+    Serial.print("O_o");
+
         
- /*   Serial.println();
-    Serial.println(imuX);
-    Serial.println(imuY);
-    Serial.println(imuZ);
-    delay(1000);*/
+    /*   Serial.write((short)(imuErrorPitch*100));
+       Serial.write((short)((currentKP*imuErrorPitch)*100));
+    Serial.write((short)((currentKD*gyroX)*100));
+    Serial.write((short)(pitchI*100));
+    Serial.print("O_o");*/
+    }
+   
+
 }
 
 void SendVolts()
@@ -476,8 +492,8 @@ gyroY=gyro.y();
   accelPitch=(atan(accY/sqrt(pow(accX,2) + pow(accZ,2)))*57.29f) -accelPitchCal;
   accelRoll=(atan(-1*(accX)/sqrt(pow((accY),2) + pow((accZ),2)))*57.29f) - accelRollCal;
 
-  totalRoll=totalRoll*0.97f+accelRoll*0.03f;
-  totalPitch=totalPitch*0.97f+accelPitch*0.03f;
+  totalRoll=totalRoll*0.92f+accelRoll*0.08f;
+  totalPitch=totalPitch*0.92f+accelPitch*0.08f;
   
   
   bno.getCalibration(&sysCal, &gyroCal, &accelCal, &magCal);
