@@ -307,11 +307,11 @@ namespace DroneUI
             {
                 if (gamepad.LeftThumbY > 0)
                 {
-                    rollGoal = Map(gamepad.LeftThumbX, 5000, 32790, 0, 25);
+                    rollGoal = Map(gamepad.LeftThumbX, 5000, 32790, 0, 20);
                 }
                 else
                 {
-                    rollGoal = Map(gamepad.LeftThumbX, -32790, -5000, -25, 0);
+                    rollGoal = Map(gamepad.LeftThumbX, -32790, -5000, -20, 0);
                 }
             }
 
@@ -323,11 +323,11 @@ namespace DroneUI
             {
                 if(gamepad.LeftThumbY>0)
                 {
-                    pitchGoal = Map(gamepad.LeftThumbY, 5000, 32790, 0, 25);
+                    pitchGoal = Map(gamepad.LeftThumbY, 5000, 32790, 0, 20);
                 }
                 else
                 {
-                    pitchGoal = Map(gamepad.LeftThumbY, -32790, -5000, -25, 0);
+                    pitchGoal = Map(gamepad.LeftThumbY, -32790, -5000, -20, 0);
                 }
        
             }
@@ -377,7 +377,7 @@ namespace DroneUI
         {
         
             if(cycle%(50/4)==0)communicator.sendMessage("MANPWR", (int)(motorPower*10) + "");
-            if (cycle % (50 / 4) == 7)  communicator.sendMessage("CDATA",(int)(pitchGoal*-100)+"|"+(int)(rollGoal*-100)+"|"+(int)(yawGoal*100));
+            if (cycle % (50 / 10) == 2)  communicator.sendMessage("CDATA",(int)(pitchGoal*-100)+"|"+(int)(rollGoal*-100)+"|"+(int)(yawGoal*100));
             cycle++;
         }
 
