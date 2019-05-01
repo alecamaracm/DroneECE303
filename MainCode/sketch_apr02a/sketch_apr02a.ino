@@ -155,8 +155,9 @@ void initializeSensors()
 
   delay(2000);
   bno.setExtCrystalUse(true);
+
   delay(1000);
-  
+//  bno.setMode((adafruit_bno055_opmode_t)5 );
   calibrateIMU();
 }
 
@@ -212,10 +213,8 @@ void loop() {
 
   //sendAccelData(); For vibration testing, use Serial chart on the USB serial
 
-  if(cycleCounter%(FPSgoal/50)==0)
-  {
     doPIDWork();
-  }
+  
 
   
   
@@ -290,8 +289,8 @@ void doPIDWork()
     
 
     
-    imuCalcPitch=constrain((currentKP*imuErrorPitch)-(currentKD*gyroX)+(pitchI),-XBOX_PITCH_MAX_CHANGE,XBOX_PITCH_MAX_CHANGE);  //Checked
-  // imuCalcRoll=constrain((currentKP*imuErrorRoll)-(currentKD*gyroY)+(rollI),-XBOX_ROLL_MAX_CHANGE,XBOX_ROLL_MAX_CHANGE);
+    imuCalcPitch=constrain((currentKP*imuErrorPitch)+(currentKD*gyroX)+(pitchI),-XBOX_PITCH_MAX_CHANGE,XBOX_PITCH_MAX_CHANGE);  //Checked
+   imuCalcRoll=constrain(-(currentKP*imuErrorRoll)-(currentKD*gyroY)-(rollI),-XBOX_ROLL_MAX_CHANGE,XBOX_ROLL_MAX_CHANGE);
  //   imuCalcYaw=constrain(XBOX_KP_YAW*imuErrorYaw+XBOX_KD_YAW*0+XBOX_KI_YAW*0,-XBOX_YAW_MAX_CHANGE,XBOX_YAW_MAX_CHANGE);
 
     imuCalcM1=XBOXthrottleGoal+imuCalcPitch-imuCalcRoll-imuCalcYaw;
@@ -464,18 +463,18 @@ void readTOFValues()
 void getIMUData()
 {  
   accel = bno.getVector(Adafruit_BNO055::VECTOR_ACCELEROMETER);
-  accX=kalmanAccelX.updateEstimate(accel.x());
+ /* accX=kalmanAccelX.updateEstimate(accel.x());
   accY=kalmanAccelY.updateEstimate(accel.y());
-  accZ=kalmanAccelZ.updateEstimate(accel.z());
+  accZ=kalmanAccelZ.updateEstimate(accel.z());*/
 
-   /*accX=accel.x();
+  accX=accel.x();
   accY=accel.y();
-  accZ=accel.z();*/
+  accZ=accel.z();
 
   
-  gyroDT=(micros()-lastGyroMicros)/1000000.0f;
-  
+
   gyro = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);  
+    gyroDT=(micros()-lastGyroMicros)/1000000.0f;  
     lastGyroMicros=micros();
  // Serial.print(gyro.x());
 //  Serial.print(" ");
@@ -492,8 +491,8 @@ gyroY=gyro.y();
   accelPitch=(atan(accY/sqrt(pow(accX,2) + pow(accZ,2)))*57.29f) -accelPitchCal;
   accelRoll=(atan(-1*(accX)/sqrt(pow((accY),2) + pow((accZ),2)))*57.29f) - accelRollCal;
 
-  totalRoll=totalRoll*0.92f+accelRoll*0.08f;
-  totalPitch=totalPitch*0.92f+accelPitch*0.08f;
+  totalRoll=totalRoll*0.98f+accelRoll*0.02f;
+  totalPitch=totalPitch*0.98f+accelPitch*0.02f;
   
   
   bno.getCalibration(&sysCal, &gyroCal, &accelCal, &magCal);
@@ -511,7 +510,8 @@ void readBME280Values()
 void setMotorPower(int motorID,float power,bool sendUpdate)
 {
   if(motorID>3) return;
-  
+
+
   if(motorEnabled[motorID]==true)
   {
     if(power==-1)power=lastMotorPowers[motorID]; //power of -1 means no change
