@@ -108,7 +108,7 @@ void initializeSensors()
 {
   initializeIRSensor();
    /* Initialise the sensor */
-  if(!bno.begin())
+  if(!bno.begin(Adafruit_BNO055::OPERATION_MODE_ACCGYRO))
   {
     /* There was a problem detecting the BNO055 ... check your connections */
     Serial2.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
@@ -315,6 +315,7 @@ void sendCurrentData()
 }
 
 void sendOutputMessage(char *key)
+
 {
   Serial2.print(key);
   Serial2.print("|");
