@@ -282,8 +282,8 @@ void doPIDWork()
     imuErrorRoll=totalRoll-XBOXrollGoal;
     imuErrorPitch=totalPitch-XBOXpitchGoal;
 
-    pitchI+=(imuErrorPitch*currentKI);
-    rollI+=(imuErrorRoll*currentKI);
+    pitchI+=(imuErrorPitch*currentKI/10);
+    rollI+=(imuErrorRoll*currentKI/10);
     pitchI=constrain(pitchI,-10,10);
     rollI=constrain(rollI,-10,10);
     
@@ -341,6 +341,8 @@ void SendVolts()
         sprintf(outputSerial,"%d",read_raw);
         sendOutputMessage("MAINVOLTS");
     }    
+    Serial.println(read_raw<3164);
+    digitalWrite(PIN_BUZZER,read_raw<3164);
 }
 
 int adcAmp1,adcAmp2,adcAmp3,adcAmp4,adcAmp5V;
@@ -464,9 +466,9 @@ void readTOFValues()
 void getIMUData()
 {  
   accel = bno.getVector(Adafruit_BNO055::VECTOR_ACCELEROMETER);
- /* accX=kalmanAccelX.updateEstimate(accel.x());
+  accX=kalmanAccelX.updateEstimate(accel.x());
   accY=kalmanAccelY.updateEstimate(accel.y());
-  accZ=kalmanAccelZ.updateEstimate(accel.z());*/
+  accZ=kalmanAccelZ.updateEstimate(accel.z());
 
   accX=accel.x();
   accY=accel.y();
