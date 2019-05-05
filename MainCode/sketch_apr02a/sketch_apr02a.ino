@@ -289,7 +289,7 @@ void doPIDWork()
     
 
     
-    imuCalcPitch=constrain((currentKP*imuErrorPitch)+(currentKD*gyroX)+(pitchI),-XBOX_PITCH_MAX_CHANGE,XBOX_PITCH_MAX_CHANGE);  //Checked
+   // imuCalcPitch=constrain((currentKP*imuErrorPitch)+(currentKD*gyroX)+(pitchI),-XBOX_PITCH_MAX_CHANGE,XBOX_PITCH_MAX_CHANGE);  //Checked
    imuCalcRoll=constrain(-(currentKP*imuErrorRoll)-(currentKD*gyroY)-(rollI),-XBOX_ROLL_MAX_CHANGE,XBOX_ROLL_MAX_CHANGE);
  //   imuCalcYaw=constrain(XBOX_KP_YAW*imuErrorYaw+XBOX_KD_YAW*0+XBOX_KI_YAW*0,-XBOX_YAW_MAX_CHANGE,XBOX_YAW_MAX_CHANGE);
 
@@ -470,9 +470,9 @@ void getIMUData()
   accY=kalmanAccelY.updateEstimate(accel.y());
   accZ=kalmanAccelZ.updateEstimate(accel.z());
 
-  accX=accel.x();
+ /* accX=accel.x();
   accY=accel.y();
-  accZ=accel.z();
+  accZ=accel.z();*/
 
   
 
