@@ -46,6 +46,7 @@
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.timerIRDraw = new System.Windows.Forms.Timer(this.components);
             this.panel3 = new System.Windows.Forms.Panel();
+            this.button6 = new System.Windows.Forms.Button();
             this.label19 = new System.Windows.Forms.Label();
             this.numericUpDownKI = new System.Windows.Forms.NumericUpDown();
             this.button5 = new System.Windows.Forms.Button();
@@ -98,7 +99,6 @@
             this.motorControl2 = new DroneUI.MotorControl();
             this.motorControl3 = new DroneUI.MotorControl();
             this.motorControl1 = new DroneUI.MotorControl();
-            this.button6 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -337,6 +337,18 @@
             this.panel3.Name = "panel3";
             this.panel3.Size = new System.Drawing.Size(812, 225);
             this.panel3.TabIndex = 10;
+            // 
+            // button6
+            // 
+            this.button6.BackColor = System.Drawing.Color.MediumPurple;
+            this.button6.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button6.Location = new System.Drawing.Point(117, 111);
+            this.button6.Name = "button6";
+            this.button6.Size = new System.Drawing.Size(98, 23);
+            this.button6.TabIndex = 53;
+            this.button6.Text = "Reset I";
+            this.button6.UseVisualStyleBackColor = false;
+            this.button6.Click += new System.EventHandler(this.button6_Click);
             // 
             // label19
             // 
@@ -909,18 +921,6 @@
             this.motorControl1.Size = new System.Drawing.Size(188, 235);
             this.motorControl1.TabIndex = 3;
             // 
-            // button6
-            // 
-            this.button6.BackColor = System.Drawing.Color.MediumPurple;
-            this.button6.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button6.Location = new System.Drawing.Point(117, 111);
-            this.button6.Name = "button6";
-            this.button6.Size = new System.Drawing.Size(98, 23);
-            this.button6.TabIndex = 53;
-            this.button6.Text = "Reset I";
-            this.button6.UseVisualStyleBackColor = false;
-            this.button6.Click += new System.EventHandler(this.button6_Click);
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -936,6 +936,7 @@
             this.Controls.Add(this.motorControl1);
             this.Controls.Add(this.pictureBox1);
             this.Name = "Form1";
+            this.Text = "ECE303 - Drone project";
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.panel1.ResumeLayout(false);
