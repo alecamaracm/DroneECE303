@@ -182,7 +182,7 @@ void loop() {
   
   if(cycleCounter%(FPSgoal/3)==0)
   {
-     // printIRPoints();
+  ////   printIRPoints();
     //printIRData();
   }
 
@@ -377,6 +377,8 @@ void sendOutputMessage(char *key)
   Serial2.print("O_o");
   memset(outputSerial, 0, 200);
 }
+
+
 
 void SendCurrentMotorPower()
 {  

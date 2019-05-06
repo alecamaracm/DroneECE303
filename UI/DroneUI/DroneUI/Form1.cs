@@ -169,6 +169,15 @@ namespace DroneUI
                         e.Graphics.FillPie(Brushes.Gray, new Rectangle((int)(IRdata.points[i].X * xMultiplier), (int)(IRdata.points[i].Y * yMultiplier), 10, 10), 0, 360);
                     }
                 }
+
+                
+            }
+            if(IRdata.pBack!=-1 && IRdata.pMiddle!=-1)
+            {
+                Pen p = new Pen(Brushes.Gold,5);
+                Point point1 = new Point((int)(IRdata.points[IRdata.pMiddle].X*xMultiplier), (int)(IRdata.points[IRdata.pMiddle].Y*yMultiplier));
+                Point point2 = new Point((int)(IRdata.points[IRdata.pBack].X*xMultiplier), (int)(IRdata.points[IRdata.pBack].Y*yMultiplier));
+                e.Graphics.DrawLine(p, point1,point2);
             }
         }
 

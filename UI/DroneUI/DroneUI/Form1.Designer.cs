@@ -379,7 +379,7 @@
             this.numericUpDownKI.Size = new System.Drawing.Size(58, 20);
             this.numericUpDownKI.TabIndex = 51;
             this.numericUpDownKI.Value = new decimal(new int[] {
-            5,
+            1,
             0,
             0,
             196608});
@@ -531,10 +531,10 @@
             this.numericUpDownkP.Size = new System.Drawing.Size(58, 20);
             this.numericUpDownkP.TabIndex = 39;
             this.numericUpDownkP.Value = new decimal(new int[] {
-            2,
+            18,
             0,
             0,
-            65536});
+            131072});
             this.numericUpDownkP.ValueChanged += new System.EventHandler(this.numericUpDownkP_ValueChanged);
             // 
             // label5VAmps
